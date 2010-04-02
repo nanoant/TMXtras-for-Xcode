@@ -24,7 +24,48 @@ static BracketMatcher* SharedInstance;
 @end
 
 static NSArray* BracketedLanguages;
+static NSDictionary* WhitespaceAttributes;
 static NSString* OpeningsClosings = @"\"\"''()[]";
+
+@implementation NSLayoutManager (BracketMatching)
+- (void)BracketMatching_drawGlyphsForGlyphRange:(NSRange)glyphRange atPoint:(NSPoint)containerOrigin
+{
+	NSString *docContents = [[self textStorage] string];
+	// Loop thru current range, drawing glyphs
+	for(int i = glyphRange.location; i < NSMaxRange(glyphRange); i++) {
+		NSString *glyph;
+		// Look for special chars
+		switch ([docContents characterAtIndex:i]) {
+		/* Space
+		case ' ':
+			glyph = @"\u2022";
+			break;
+		*/
+		// Tab
+		case '\t':
+			glyph = @"\u25B8";
+			break;
+		// EOL
+		case 0x2028:
+		case 0x2029:
+		case '\n':
+		case '\r':
+			glyph = @"\u00AC";
+			break;
+		// Nothing
+		default:
+			continue;
+		}
+		// Should we draw?
+		NSPoint glyphPoint = [self locationForGlyphAtIndex:i];
+		NSRect glyphRect = [self lineFragmentRectForGlyphAtIndex:i effectiveRange:NULL];
+		glyphPoint.x += glyphRect.origin.x;
+		glyphPoint.y = glyphRect.origin.y;
+		[glyph drawAtPoint:glyphPoint withAttributes:WhitespaceAttributes];
+	}
+    [self BracketMatching_drawGlyphsForGlyphRange:glyphRange atPoint:containerOrigin];
+}
+@end
 
 @implementation NSTextView (BracketMatching)
 - (void)BracketMatching_keyDown:(NSEvent*)event
@@ -81,10 +122,12 @@ static NSString* OpeningsClosings = @"\"\"''()[]";
 		return;
 
 	if([NSClassFromString(@"XCSourceCodeTextView") jr_swizzleMethod:@selector(keyDown:) withMethod:@selector(BracketMatching_keyDown:) error:NULL] &&
-	   [NSClassFromString(@"XCSourceCodeTextView") jr_swizzleMethod:@selector(deleteBackward:) withMethod:@selector(BracketMatching_deleteBackward:) error:NULL])
+	   [NSClassFromString(@"XCSourceCodeTextView") jr_swizzleMethod:@selector(deleteBackward:) withMethod:@selector(BracketMatching_deleteBackward:) error:NULL] &&
+	   [NSClassFromString(@"XCLayoutManager") jr_swizzleMethod:@selector(drawGlyphsForGlyphRange:atPoint:) withMethod:@selector(BracketMatching_drawGlyphsForGlyphRange:atPoint:) error:NULL])
 		NSLog(@"BracketMatcher loaded");
 
 	BracketedLanguages = [[NSArray alloc] initWithObjects:@"xcode.lang.objcpp", @"xcode.lang.objc", @"xcode.lang.objj", nil];
+	WhitespaceAttributes = [[NSDictionary alloc] initWithObjectsAndKeys:[NSColor colorWithDeviceRed:0.9f green:0.9f blue:0.9f alpha:1.0f], NSForegroundColorAttributeName, nil];
 }
 
 + (BracketMatcher*)sharedInstance
