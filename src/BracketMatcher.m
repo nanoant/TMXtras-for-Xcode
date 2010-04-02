@@ -24,20 +24,53 @@ static BracketMatcher* SharedInstance;
 @end
 
 static NSArray* BracketedLanguages;
+static NSString* OpeningsClosings = @"\"\"''()[]";
 
 @implementation NSTextView (BracketMatching)
 - (void)BracketMatching_keyDown:(NSEvent*)event
 {
 	BOOL didInsert = NO;
-	if([[event characters] isEqualToString:@"]"])
+	if([event.characters isEqualToString:@"]"])
 	{
 		NSString* language = [[self textStorage] language];
 		if([BracketedLanguages containsObject:language])
 			didInsert = [[BracketMatcher sharedInstance] insertBracketForTextView:self];
+	} else {
+		NSRange range = [OpeningsClosings rangeOfString:event.characters];
+		if(range.length == 1 && range.location % 2 == 0) {
+			NSString* language = [[self textStorage] language];
+			if([BracketedLanguages containsObject:language]) {
+				range.location ++;
+				NSString* closing = [OpeningsClosings substringWithRange:range];
+				didInsert = [[BracketMatcher sharedInstance] insertForTextView:self opening:event.characters closing:closing];
+			}
+		}
 	}
 
 	if(!didInsert)
 		[self BracketMatching_keyDown:event];
+}
+
+- (void)BracketMatching_deleteBackward:(NSEvent*)event
+{
+	NSTextView *textView = self;
+	NSRange selectedRange = [[[textView selectedRanges] lastObject] rangeValue];
+	if(selectedRange.length == 0) {
+		NSRange checkRange = NSMakeRange(selectedRange.location - 1, 2);
+		@try {
+			NSString* substring = [[[textView textStorage] string] substringWithRange:checkRange];
+			NSRange range = [OpeningsClosings rangeOfString:substring];
+			if(range.length == 2 && range.location % 2 == 0) {
+				[textView moveForward:event];
+				[textView BracketMatching_deleteBackward:event];
+			}
+		} @catch(NSException *e) {
+			if(![e.name isEqualToString:NSRangeException]) {
+				[e raise];
+			}
+		}
+	}
+	[self BracketMatching_deleteBackward:event];
 }
 @end
 
@@ -47,7 +80,8 @@ static NSArray* BracketedLanguages;
 	if(![[[NSBundle mainBundle] bundleIdentifier] isEqualToString:@"com.apple.Xcode"])
 		return;
 
-	if([NSClassFromString(@"XCSourceCodeTextView") jr_swizzleMethod:@selector(keyDown:) withMethod:@selector(BracketMatching_keyDown:) error:NULL])
+	if([NSClassFromString(@"XCSourceCodeTextView") jr_swizzleMethod:@selector(keyDown:) withMethod:@selector(BracketMatching_keyDown:) error:NULL] &&
+	   [NSClassFromString(@"XCSourceCodeTextView") jr_swizzleMethod:@selector(deleteBackward:) withMethod:@selector(BracketMatching_deleteBackward:) error:NULL])
 		NSLog(@"BracketMatcher loaded");
 
 	BracketedLanguages = [[NSArray alloc] initWithObjects:@"xcode.lang.objcpp", @"xcode.lang.objc", @"xcode.lang.objj", nil];
@@ -130,4 +164,24 @@ NSUInteger TextViewLineIndex (NSTextView* textView)
 
 	return YES;
 }
+
+- (BOOL)insertForTextView:(NSTextView*)textView opening:(NSString *)opening closing:(NSString *)closing
+{
+	NSRange selectedRange = [[[textView selectedRanges] lastObject] rangeValue];
+
+	if(selectedRange.length > 0)
+	{
+		NSString* selectedText = [textView.textStorage.string substringWithRange:selectedRange];
+		[textView insertText:opening];
+		[textView insertText:selectedText];
+		[textView insertText:closing];
+	} else {
+		[textView insertText:opening];
+		[textView insertText:closing];
+		[textView moveBackward:self];
+	}
+
+	return YES;
+}
+
 @end

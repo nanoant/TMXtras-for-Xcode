@@ -14,4 +14,5 @@
 }
 + (BracketMatcher*)sharedInstance;
 - (BOOL)insertBracketForTextView:(NSTextView*)textView;
+- (BOOL)insertForTextView:(NSTextView*)textView opening:(NSString *)opening closing:(NSString *)closing;
 @end
