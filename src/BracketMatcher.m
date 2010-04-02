@@ -101,7 +101,13 @@ NSUInteger TextViewLineIndex (NSTextView* textView)
 
 	NSRange selectedRange = [[[textView selectedRanges] lastObject] rangeValue];
 	if(selectedRange.length > 0)
-		return NO;
+	{
+		NSString* selectedText = [textView.textStorage.string substringWithRange:selectedRange];
+		[textView insertText:@"["];
+		[textView insertText:selectedText];
+		[textView insertText:@"]"];
+		return YES;
+	}
 
 	NSRange lineRange = [textView.textStorage.string lineRangeForRange:selectedRange];
 	lineRange.length -= 1;
