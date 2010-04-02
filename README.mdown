@@ -1,11 +1,23 @@
 # What is it?
 
-This is an xcode plug-in which makes writing Obj-C easier, by automatically inserting paired message sending brackets.
+This is a *fork* of excellent Ciarán Walsh's xcode plug-in which makes writing Obj-C easier, by automatically inserting paired message sending brackets.
 Watch [the screencast](http://ciaranwal.sh/files/xcode-bracket-matcher.mov) to see how it works.
+
+# What's new?
+
+This *fork* adds some extra features that makes *Xcode* editing feel more like *TextMate*:
+
+* **Auto closing of brackets and quotes:** When you open a bracket or (double)quote, the plugin closes it for you and places the cursor (insertion point) between brackets (quotes).
+
+* **Auto deletion of both brackets:** When the cursor (insertion point) is between empty brackets (quotes), pressing backspace (delete) removes them both.
+
+* **`]` always wraps:** Pressing `]` when there is something selected, wraps the selection with square brackets, rather than replacing whole selection with `]`.
+
+* **Whitespace display:** This is well known *TextMate* feature I missed most in *Xcode*, now *Xcode* displays whitespaces (aka invisibles) with similar glyphs as *TextMate* using light-grey color.
 
 # Installation
 
-1. Open the project and build the plug-in (or download and extract it from the [Downloads page](http://github.com/ciaran/xcode-bracket-matcher/downloads)).
+1. Open the project and build the plug-in.
 2. After a successful build the plug-in should automatically be installed; to install it manually move the product (`XcodeBracketMatcher.pbplugin`) to `~/Library/Application Support/Developer/Shared/Xcode/Plug-ins` (create the directory if necessary).
 3. Restart Xcode.
 
