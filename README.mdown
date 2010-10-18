@@ -5,7 +5,7 @@ Watch [the screencast](http://ciaranwal.sh/files/xcode-bracket-matcher.mov) to s
 
 # What's new?
 
-This *fork* adds some extra features that makes *Xcode* editing feel more like *TextMate*:
+This *fork* adds *Xcode 4* support and some extra features that makes *Xcode* editing feel more like *TextMate*:
 
 * **Auto closing of brackets and quotes:** When you open a bracket or (double)quote, the plugin closes it for you and places the cursor (insertion point) between brackets (quotes).
 
