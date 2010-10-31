@@ -1,0 +1,189 @@
+// !$*UTF8*$!
+{
+	089C1669FE841209C02AAC07 /* Project object */ = {
+		activeArchitecturePreference = x86_64;
+		activeBuildConfigurationName = Release;
+		activeTarget = 8D5B49AC048680CD000E48DA /* XcodeMate */;
+		addToTargets = (
+			8D5B49AC048680CD000E48DA /* XcodeMate */,
+		);
+		codeSenseManager = 9707949F114816EE00DDD532 /* Code sense */;
+		perUserDictionary = {
+			PBXConfiguration.PBXFileTableDataSource3.PBXFileTableDataSource = {
+				PBXFileTableDataSourceColumnSortingDirectionKey = "-1";
+				PBXFileTableDataSourceColumnSortingKey = PBXFileDataSource_Filename_ColumnID;
+				PBXFileTableDataSourceColumnWidthsKey = (
+					20,
+					925,
+					20,
+					48,
+					43,
+					43,
+					20,
+				);
+				PBXFileTableDataSourceColumnsKey = (
+					PBXFileDataSource_FiletypeID,
+					PBXFileDataSource_Filename_ColumnID,
+					PBXFileDataSource_Built_ColumnID,
+					PBXFileDataSource_ObjectSize_ColumnID,
+					PBXFileDataSource_Errors_ColumnID,
+					PBXFileDataSource_Warnings_ColumnID,
+					PBXFileDataSource_Target_ColumnID,
+				);
+			};
+			PBXConfiguration.PBXTargetDataSource.PBXTargetDataSource = {
+				PBXFileTableDataSourceColumnSortingDirectionKey = "-1";
+				PBXFileTableDataSourceColumnSortingKey = PBXFileDataSource_Filename_ColumnID;
+				PBXFileTableDataSourceColumnWidthsKey = (
+					20,
+					885,
+					60,
+					20,
+					48,
+					43,
+					43,
+				);
+				PBXFileTableDataSourceColumnsKey = (
+					PBXFileDataSource_FiletypeID,
+					PBXFileDataSource_Filename_ColumnID,
+					PBXTargetDataSource_PrimaryAttribute,
+					PBXFileDataSource_Built_ColumnID,
+					PBXFileDataSource_ObjectSize_ColumnID,
+					PBXFileDataSource_Errors_ColumnID,
+					PBXFileDataSource_Warnings_ColumnID,
+				);
+			};
+			PBXPerProjectTemplateStateSaveDate = 310255920;
+			PBXWorkspaceStateSaveDate = 310255920;
+		};
+		perUserProjectItems = {
+			971CC15C127E1DDE005792E7 = 971CC15C127E1DDE005792E7 /* PBXTextBookmark */;
+			972CBF94126C5B9E00784A0E = 972CBF94126C5B9E00784A0E /* PBXTextBookmark */;
+			97396329127E212B00FDB581 = 97396329127E212B00FDB581 /* PBXTextBookmark */;
+			977FA976126CC91800889E3D = 977FA976126CC91800889E3D /* PBXTextBookmark */;
+			97A17735127E213400BD4C4C /* PBXTextBookmark */ = 97A17735127E213400BD4C4C /* PBXTextBookmark */;
+			97A3D5D2127E1FFA007A3B0B = 97A3D5D2127E1FFA007A3B0B /* PlistBookmark */;
+			97B77CAB127E2107009DFFDC = 97B77CAB127E2107009DFFDC /* PBXTextBookmark */;
+		};
+		sourceControlManager = 9707949E114816EE00DDD532 /* Source Control */;
+		userBuildSettings = {
+		};
+	};
+	8D5B49AC048680CD000E48DA /* XcodeMate */ = {
+		activeExec = 0;
+	};
+	919D69000F844642007548E6 /* JRSwizzle.h */ = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {1103, 769}}";
+			sepNavSelRange = "{350, 0}";
+			sepNavVisRange = "{0, 574}";
+		};
+	};
+	919D69010F844642007548E6 /* JRSwizzle.m */ = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {831, 1904}}";
+			sepNavSelRange = "{1735, 0}";
+			sepNavVisRange = "{650, 1626}";
+		};
+	};
+	91FC34D10F84352000B86DCD /* XcodeMate.h */ = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {831, 764}}";
+			sepNavSelRange = "{213, 0}";
+			sepNavVisRange = "{0, 404}";
+		};
+	};
+	91FC34D20F84352000B86DCD /* XcodeMate.m */ = {
+		uiCtxt = {
+			sepNavIntBoundsRect = "{{0, 0}, {1103, 3584}}";
+			sepNavSelRange = "{8075, 0}";
+			sepNavVisRange = "{6518, 2303}";
+		};
+	};
+	9707949E114816EE00DDD532 /* Source Control */ = {
+		isa = PBXSourceControlManager;
+		fallbackIsa = XCSourceControlManager;
+		isSCMEnabled = 0;
+		scmConfiguration = {
+			repositoryNamesForRoots = {
+				"" = "";
+			};
+		};
+	};
+	9707949F114816EE00DDD532 /* Code sense */ = {
+		isa = PBXCodeSenseManager;
+		indexTemplatePath = "";
+	};
+	971CC15C127E1DDE005792E7 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 91FC34D10F84352000B86DCD /* XcodeMate.h */;
+		name = "XcodeMate.h: 14";
+		rLen = 0;
+		rLoc = 213;
+		rType = 0;
+		vrLen = 404;
+		vrLoc = 0;
+	};
+	972CBF94126C5B9E00784A0E /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 919D69000F844642007548E6 /* JRSwizzle.h */;
+		name = "JRSwizzle.h: 9";
+		rLen = 0;
+		rLoc = 350;
+		rType = 0;
+		vrLen = 574;
+		vrLoc = 0;
+	};
+	97396329127E212B00FDB581 /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 91FC34D20F84352000B86DCD /* XcodeMate.m */;
+		name = "XcodeMate.m: 231";
+		rLen = 0;
+		rLoc = 8654;
+		rType = 0;
+		vrLen = 2303;
+		vrLoc = 6518;
+	};
+	977FA976126CC91800889E3D /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 919D69010F844642007548E6 /* JRSwizzle.m */;
+		name = "JRSwizzle.m: 47";
+		rLen = 0;
+		rLoc = 1735;
+		rType = 0;
+		vrLen = 1626;
+		vrLoc = 650;
+	};
+	97A17735127E213400BD4C4C /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 91FC34D20F84352000B86DCD /* XcodeMate.m */;
+		name = "XcodeMate.m: 215";
+		rLen = 0;
+		rLoc = 8075;
+		rType = 0;
+		vrLen = 2303;
+		vrLoc = 6518;
+	};
+	97A3D5D2127E1FFA007A3B0B /* PlistBookmark */ = {
+		isa = PlistBookmark;
+		fRef = 916F428A0F843B3100E18365 /* Info.plist */;
+		fallbackIsa = PBXBookmark;
+		isK = 0;
+		kPath = (
+			NSPrincipalClass,
+		);
+		name = /Users/ono/Code/Projects/Mac/XcodeMate/resources/Info.plist;
+		rLen = 0;
+		rLoc = 9223372036854775808;
+	};
+	97B77CAB127E2107009DFFDC /* PBXTextBookmark */ = {
+		isa = PBXTextBookmark;
+		fRef = 91FC34D20F84352000B86DCD /* XcodeMate.m */;
+		name = "XcodeMate.m: 224";
+		rLen = 0;
+		rLoc = 8286;
+		rType = 0;
+		vrLen = 2302;
+		vrLoc = 6518;
+	};
+}
