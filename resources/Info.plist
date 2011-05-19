@@ -28,5 +28,7 @@
 	<string>NO</string>
 	<key>XCGCReady</key>
 	<string>YES</string>
+	<key>XC4Compatible</key>
+	<true/>
 </dict>
 </plist>
