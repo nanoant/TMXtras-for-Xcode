@@ -4,3 +4,7 @@ XcodeBracketMatcher.xcodeproj/*.perspectivev3
 XcodeBracketMatcher.xcodeproj/*.pbxuser
 XcodeBracketMatcher.xcodeproj/*.mode2v3
 XcodeBracketMatcher.xcodeproj/*.mode1v3
+XcodeMate.xcodeproj/*.mode1v3
+XcodeMate.xcodeproj/*.pbxuser
+XcodeMate.xcodeproj/project.xcworkspace/
+XcodeMate.xcodeproj/xcuserdata/
