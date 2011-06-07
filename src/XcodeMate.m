@@ -236,7 +236,7 @@ static NSUInteger TextViewLineIndex (NSTextView *textView)
 						  @"Xcode.SourceCodeLanguage.Objective-C++",
 						  @"Xcode.SourceCodeLanguage.Objective-J",
 						  nil];
-	WhitespaceAttributes = [[NSDictionary alloc] initWithObjectsAndKeys:[NSColor colorWithDeviceWhite:0.0 alpha:0.12], NSForegroundColorAttributeName, nil];
+	WhitespaceAttributes = [[NSDictionary alloc] initWithObjectsAndKeys:[NSColor colorWithDeviceWhite:0.6 alpha:0.25], NSForegroundColorAttributeName, nil];
 
 	NSLog(@"XcodeMate %@ loaded.", [[NSBundle mainBundle] objectForInfoDictionaryKey:(NSString *)kCFBundleVersionKey]);
 }
