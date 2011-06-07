@@ -143,9 +143,17 @@ static NSUInteger TextViewLineIndex (NSTextView *textView)
 	if(selectedRange.length > 0)
 	{
 		NSString *selectedText = [textView.textStorage.string substringWithRange:selectedRange];
-		[textView insertText:opening];
-		[textView insertText:selectedText];
-		[textView insertText:closing];
+		// NOTE: If we are in the placeholder, replace it
+		if([selectedText hasPrefix:@"<#"] &&
+		   [selectedText hasSuffix:@"#>"]) {
+			[textView insertText:opening];
+			[textView insertText:closing];
+			[textView moveBackward:self];
+		} else {
+			[textView insertText:opening];
+			[textView insertText:selectedText];
+			[textView insertText:closing];
+		}
 	} else {
 		[textView insertText:opening];
 		[textView insertText:closing];
