@@ -69,6 +69,13 @@ static NSString *OpeningsClosings = @"\"\"''()[]";
 @end
 
 @implementation NSTextView (XcodeMate)
+- (void)XcodeMate_changeColor:(id)sender
+{
+	if (![sender isKindOfClass:[NSColorPanel class]]) {
+		[self XcodeMate_changeColor:sender];
+	}
+}
+
 - (void)XcodeMate_keyDown:(NSEvent*)event
 {
 	BOOL didInsert = NO;
@@ -202,6 +209,10 @@ static NSUInteger TextViewLineIndex (NSTextView *textView)
 			return;
 		}
 		NSError *error = nil;
+		if(![NSClassFromString(@"DVTSourceTextView") jr_swizzleMethod:@selector(changeColor:) withMethod:@selector(XcodeMate_changeColor:) error:&error]) {
+			NSLog(@"XcodeMate failed to swizzle `-[DVTSourceTextView changeColor:]', %@", [error localizedDescription]);
+		}
+		error = nil;
 		if(![NSClassFromString(@"DVTSourceTextView") jr_swizzleMethod:@selector(keyDown:) withMethod:@selector(XcodeMate_keyDown:) error:&error]) {
 			NSLog(@"XcodeMate failed to swizzle `-[DVTSourceTextView keyDown:]', %@", [error localizedDescription]);
 		}
