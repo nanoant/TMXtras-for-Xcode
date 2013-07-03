@@ -139,7 +139,9 @@ static NSUInteger TextViewLineIndex (NSTextView *textView)
 - (BOOL)XcodeMate_insertForTextView:(NSTextView *)textView opening:(NSString *)opening closing:(NSString *)closing
 {
 	NSRange selectedRange = [[[textView selectedRanges] lastObject] rangeValue];
-	
+
+	[textView.undoManager beginUndoGrouping];
+
 	if(selectedRange.length > 0)
 	{
 		NSString *selectedText = [textView.textStorage.string substringWithRange:selectedRange];
@@ -159,7 +161,9 @@ static NSUInteger TextViewLineIndex (NSTextView *textView)
 		[textView insertText:closing];
 		[textView moveBackward:self];
 	}
-	
+
+	[textView.undoManager endUndoGrouping];
+
 	return YES;
 }
 
