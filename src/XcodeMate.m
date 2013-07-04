@@ -202,10 +202,14 @@ static NSUInteger TextViewLineIndex (NSTextView *textView)
 
 + (void)pluginDidLoad:(NSBundle *)bundle
 {
+	NSString *bundleIdentifier = [[NSBundle mainBundle] bundleIdentifier];
 	// Xcode 4 support
-	if(![[[NSBundle mainBundle] bundleIdentifier] isEqualToString:@"com.apple.Xcode"]) {
-		if(![[[NSBundle mainBundle] bundleIdentifier] isEqualToString:@"com.apple.dt.Xcode"]) {
-			NSLog(@"XcodeMate unknown bundle identifier: %@", [[NSBundle mainBundle] bundleIdentifier]);
+	if(![bundleIdentifier isEqualToString:@"com.apple.Xcode"]) {
+		if(![bundleIdentifier isEqualToString:@"com.apple.dt.Xcode"]) {
+			if(bundleIdentifier.length) {
+				// complain only when there's bundle identifier
+				NSLog(@"XcodeMate unknown bundle identifier: %@", bundleIdentifier);
+			}
 			return;
 		}
 		NSError *error = nil;
