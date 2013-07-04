@@ -27,6 +27,7 @@
 static NSSet *XcodeMateLanguages;
 static NSDictionary *WhitespaceAttributes;
 static NSString *OpeningsClosings = @"\"\"''()[]";
+#define kBracketsLocation 4
 
 @implementation NSLayoutManager (XcodeMate)
 - (void)XcodeMate_drawGlyphsForGlyphRange:(NSRange)glyphRange atPoint:(NSPoint)containerOrigin
@@ -91,10 +92,21 @@ static NSString *OpeningsClosings = @"\"\"''()[]";
 			}
 			if([XcodeMateLanguages containsObject:language]) {
 				NSRange selectedRange = [[[self selectedRanges] lastObject] rangeValue];
-				if(![[[self textStorage] sourceModel] isInStringConstantAtLocation:selectedRange.location]) {
-					range.location ++;
-					NSString *closing = [OpeningsClosings substringWithRange:range];
-					didInsert = [self XcodeMate_insertForTextView:self opening:event.characters closing:closing];
+				if(![[[self textStorage] sourceModel] isInStringConstantAtLocation:selectedRange.location] ||
+				   range.location >= kBracketsLocation) {
+					// ensure we insert brackets closing only when next character is whitespace
+					BOOL nextBracketSame = NO;
+					if(!selectedRange.length) {
+						NSString *nextCharacter = [[[self textStorage] string] substringWithRange:NSMakeRange(selectedRange.location, 1)];
+						if([nextCharacter isEqualToString:[OpeningsClosings substringWithRange:range]]) {
+							nextBracketSame = YES;
+						}
+					}
+					if(!nextBracketSame) {
+						range.location ++;
+						NSString *closing = [OpeningsClosings substringWithRange:range];
+						didInsert = [self XcodeMate_insertForTextView:self opening:event.characters closing:closing];
+					}
 				}
 			}
 		}
