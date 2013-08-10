@@ -27,6 +27,14 @@
 static NSSet *XcodeMateLanguages;
 static NSDictionary *WhitespaceAttributes;
 static NSString *OpeningsClosings = @"\"\"''()[]";
+
+static NSString *SpaceGlyph  = @""; // @"\u2022"
+static NSString *TabGlyph    = @"\u25B8";
+static NSString *ReturnGlyph = @"\u00AC";
+
+static CGFloat WhitespaceGray  = 0.6;
+static CGFloat WhitespaceAlpha = 0.25;
+
 #define kBracketsLocation 4
 
 @implementation NSLayoutManager (XcodeMate)
@@ -38,21 +46,25 @@ static NSString *OpeningsClosings = @"\"\"''()[]";
 		NSString *glyph;
 		// Look for special chars
 		switch ([docContents characterAtIndex:i]) {
-		/* Space
 		case ' ':
-			glyph = @"\u2022";
+			if (SpaceGlyph.length) {
+				glyph = @"\u2022";
+			}
 			break;
-		*/
 		// Tab
 		case '\t':
-			glyph = @"\u25B8";
+			if (TabGlyph.length) {
+				glyph = @"\u25B8";
+			}
 			break;
 		// EOL
 		case 0x2028:
 		case 0x2029:
 		case '\n':
 		case '\r':
-			glyph = @"\u00AC";
+			if (ReturnGlyph.length) {
+				glyph = @"\u00AC";
+			}
 			break;
 		// Nothing
 		default:
@@ -255,6 +267,28 @@ static NSUInteger TextViewLineIndex (NSTextView *textView)
 		}
 	}
 
+	NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+	NSString *ovalue;
+	if ((ovalue = [userDefaults objectForKey:@"XcodeMateSpaceGlyph"]) &&
+		[ovalue isKindOfClass:[NSString class]]) {
+		SpaceGlyph = ovalue;
+	}
+	if ((ovalue = [userDefaults objectForKey:@"XcodeMateTabGlyph"]) &&
+		[ovalue isKindOfClass:[NSString class]]) {
+		TabGlyph = ovalue;
+	}
+	if ((ovalue = [userDefaults objectForKey:@"XcodeMateReturnGlyph"]) &&
+		[ovalue isKindOfClass:[NSString class]]) {
+		ReturnGlyph = ovalue;
+	}
+	double dvalue;
+	if ((dvalue = [userDefaults doubleForKey:@"XcodeMateWhitespaceGray"])) {
+		WhitespaceGray = dvalue;
+	}
+	if ((dvalue = [userDefaults doubleForKey:@"XcodeMateWhitespaceAlpha"])) {
+		WhitespaceAlpha = dvalue;
+	}
+
 	XcodeMateLanguages = [[NSSet alloc] initWithObjects:
 						  @"xcode.lang.c", // Xcode 3
 						  @"xcode.lang.cpp",
@@ -267,7 +301,7 @@ static NSUInteger TextViewLineIndex (NSTextView *textView)
 						  @"Xcode.SourceCodeLanguage.Objective-C++",
 						  @"Xcode.SourceCodeLanguage.Objective-J",
 						  nil];
-	WhitespaceAttributes = [[NSDictionary alloc] initWithObjectsAndKeys:[NSColor colorWithDeviceWhite:0.6 alpha:0.25], NSForegroundColorAttributeName, nil];
+	WhitespaceAttributes = [[NSDictionary alloc] initWithObjectsAndKeys:[NSColor colorWithDeviceWhite:WhitespaceGray alpha:WhitespaceAlpha], NSForegroundColorAttributeName, nil];
 #if DEBUG
 	NSLog(@"XcodeMate %@ loaded.", [[NSBundle mainBundle] objectForInfoDictionaryKey:(NSString *)kCFBundleVersionKey]);
 #endif
