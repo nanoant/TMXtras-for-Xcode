@@ -10,4 +10,5 @@
 	"XC4Compatible"               = "YES";
 	XCGCReady                     = "YES";
 	XCPluginHasUI                 = "NO";
+	DVTPlugInCompatibilityUUIDs   = ( "63FC1C47-140D-42B0-BB4D-A10B2D225574" );
 }
