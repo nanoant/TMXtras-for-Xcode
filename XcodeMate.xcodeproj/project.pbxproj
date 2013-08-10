@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		8D5B49B4048680CD000E48DA /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7ADFEA557BF11CA2CBB /* Cocoa.framework */; };
-		916F428C0F843B3100E18365 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 916F42880F843B3100E18365 /* InfoPlist.strings */; };
 		919D69020F844642007548E6 /* JRSwizzle.m in Sources */ = {isa = PBXBuildFile; fileRef = 919D69010F844642007548E6 /* JRSwizzle.m */; };
 		91FC34D30F84352000B86DCD /* XcodeMate.m in Sources */ = {isa = PBXBuildFile; fileRef = 91FC34D20F84352000B86DCD /* XcodeMate.m */; };
 /* End PBXBuildFile section */
@@ -18,7 +17,6 @@
 		089C167FFE841241C02AAC07 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		1058C7ADFEA557BF11CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		8D5B49B6048680CD000E48DA /* XcodeMate.pbplugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = XcodeMate.pbplugin; sourceTree = BUILT_PRODUCTS_DIR; };
-		916F42890F843B3100E18365 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; name = English; path = InfoPlist.strings; sourceTree = "<group>"; };
 		916F428A0F843B3100E18365 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		919D69000F844642007548E6 /* JRSwizzle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JRSwizzle.h; sourceTree = "<group>"; };
 		919D69010F844642007548E6 /* JRSwizzle.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = JRSwizzle.m; sourceTree = "<group>"; };
@@ -102,7 +100,6 @@
 		916F427D0F843AF300E18365 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				916F42880F843B3100E18365 /* InfoPlist.strings */,
 				916F428A0F843B3100E18365 /* Info.plist */,
 			);
 			name = Resources;
@@ -162,7 +159,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				916F428C0F843B3100E18365 /* InfoPlist.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -195,18 +191,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXVariantGroup section */
-		916F42880F843B3100E18365 /* InfoPlist.strings */ = {
-			isa = PBXVariantGroup;
-			children = (
-				916F42890F843B3100E18365 /* English */,
-			);
-			name = InfoPlist.strings;
-			path = English.lproj;
-			sourceTree = "<group>";
-		};
-/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		1DEB913B08733D840010E9CD /* Debug */ = {
