@@ -29,7 +29,7 @@ static NSDictionary *WhitespaceAttributes;
 static NSString *OpeningsClosings = @"\"\"''()[]";
 
 static NSString *SpaceGlyph  = @""; // @"\u2022"
-static NSString *TabGlyph    = @"\u25B8";
+static NSString *TabGlyph    = @"\u254e"; // @"\u25B8";
 static NSString *ReturnGlyph = @"\u00AC";
 
 static CGFloat WhitespaceGray  = 0.6;
@@ -47,25 +47,28 @@ static CGFloat WhitespaceAlpha = 0.25;
 		// Look for special chars
 		switch ([docContents characterAtIndex:i]) {
 		case ' ':
-			if (SpaceGlyph.length) {
-				glyph = @"\u2022";
+			if (SpaceGlyph.length == 1) {
+				glyph = SpaceGlyph;
+				break;
 			}
-			break;
+			continue;
 		// Tab
 		case '\t':
-			if (TabGlyph.length) {
-				glyph = @"\u25B8";
+			if (TabGlyph.length == 1) {
+				glyph = TabGlyph;
+				break;
 			}
-			break;
+			continue;
 		// EOL
 		case 0x2028:
 		case 0x2029:
 		case '\n':
 		case '\r':
-			if (ReturnGlyph.length) {
-				glyph = @"\u00AC";
+			if (ReturnGlyph.length == 1) {
+				glyph = ReturnGlyph;
+				break;
 			}
-			break;
+			continue;
 		// Nothing
 		default:
 			continue;
