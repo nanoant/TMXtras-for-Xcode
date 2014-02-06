@@ -69,8 +69,7 @@
 #pragma mark - Helpers
 
 @implementation NSObject (XcodeMate)
-+ (BOOL)XcodeMate_swizzle:(SEL)original with:(SEL)replacement
-{
++ (BOOL)XcodeMate_swizzle:(SEL)original with:(SEL)replacement {
   Method originalMethod = class_getInstanceMethod(self, original);
   if (!originalMethod) {
     NSLog(@"XcodeMate error: original method -[%@ %@] not found",
@@ -92,13 +91,19 @@
 
 #pragma mark - Default settings
 
-static NSSet *XcodeMateLanguages;
-static NSDictionary *WhitespaceAttributes;
+static NSSet *XcodeMateLanguages = nil;
+static NSDictionary *WhitespaceAttributes = nil;
 static NSString *OpeningsClosings = @"\"\"''()[]";
 
-static NSString *SpaceGlyph = @"";    // @"\u2022"
-static NSString *TabGlyph = @"\u254E"; // @"\u25B8";
-static NSString *ReturnGlyph = @"\u00AC";
+static NSString *SpaceGlyph = nil;
+static NSString *TabGlyph = nil;
+static NSString *ReturnGlyph = nil;
+static NSString *ClangFormatPath = nil;
+
+static NSString *DefaultSpaceGlyph /*******/ = nil;       // @"\u2022"
+static NSString *DefaultTabGlyph /*********/ = @"\u254E"; // @"\u25B8";
+static NSString *DefaultReturnGlyph /******/ = @"\u00AC";
+static NSString *DefaultClangFormatPath /**/ = nil;
 
 static CGFloat WhitespaceGray = 0.6;
 static CGFloat WhitespaceAlpha = 0.25;
@@ -111,8 +116,7 @@ static CGFloat WhitespaceAlpha = 0.25;
 
 @implementation NSLayoutManager (XcodeMate)
 - (void)XcodeMate_drawGlyphsForGlyphRange:(NSRange)glyphRange
-                                  atPoint:(NSPoint)containerOrigin
-{
+                                  atPoint:(NSPoint)containerOrigin {
   NSString *docContents = [[self textStorage] string];
   // Loop thru current range, drawing glyphs
   for (int i = glyphRange.location; i < NSMaxRange(glyphRange); i++) {
@@ -163,15 +167,13 @@ static CGFloat WhitespaceAlpha = 0.25;
 #pragma mark - Bracket marching & duplication
 
 @implementation NSTextView (XcodeMate)
-- (void)XcodeMate_changeColor:(id)sender
-{
+- (void)XcodeMate_changeColor:(id)sender {
   if (![sender isKindOfClass:[NSColorPanel class]]) {
     [self XcodeMate_changeColor:sender];
   }
 }
 
-- (void)XcodeMate_keyDown:(NSEvent *)event
-{
+- (void)XcodeMate_keyDown:(NSEvent *)event {
   BOOL didInsert = NO;
   if ([event.charactersIgnoringModifiers isEqualToString:@"D"] &&
       ([event modifierFlags] & NSControlKeyMask)) {
@@ -208,16 +210,15 @@ static CGFloat WhitespaceAlpha = 0.25;
     }
   }
 
-  if (!didInsert) [self XcodeMate_keyDown:event];
+  if (!didInsert)
+    [self XcodeMate_keyDown:event];
 }
 
-- (void)XcodeMate_deleteBackward:(NSEvent *)event
-{
+- (void)XcodeMate_deleteBackward:(NSEvent *)event {
   NSRange selectedRange = [[[self selectedRanges] lastObject] rangeValue];
   if (selectedRange.length == 0) {
     NSRange checkRange = NSMakeRange(selectedRange.location - 1, 2);
-    @try
-    {
+    @try {
       NSString *substring =
           [[[self textStorage] string] substringWithRange:checkRange];
       NSRange range = [OpeningsClosings rangeOfString:substring];
@@ -229,8 +230,7 @@ static CGFloat WhitespaceAlpha = 0.25;
         }
       }
     }
-    @catch (NSException *e)
-    {
+    @catch (NSException *e) {
       if (![e.name isEqualToString:NSRangeException]) {
         [e raise];
       }
@@ -239,22 +239,21 @@ static CGFloat WhitespaceAlpha = 0.25;
   [self XcodeMate_deleteBackward:event];
 }
 
-static NSUInteger TextViewLineIndex(NSTextView *textView)
-{
+static NSUInteger TextViewLineIndex(NSTextView *textView) {
   NSRange selectedRange = [[[textView selectedRanges] lastObject] rangeValue];
   NSUInteger res = selectedRange.location;
   NSString *substring =
       [[[textView textStorage] string] substringToIndex:selectedRange.location];
   NSUInteger newline =
       [substring rangeOfString:@"\n" options:NSBackwardsSearch].location;
-  if (newline != NSNotFound) res -= newline + 1;
+  if (newline != NSNotFound)
+    res -= newline + 1;
   return res;
 }
 
 - (BOOL)XcodeMate_insertForTextView:(NSTextView *)textView
                             opening:(NSString *)opening
-                            closing:(NSString *)closing
-{
+                            closing:(NSString *)closing {
   NSRange selectedRange = [[[textView selectedRanges] lastObject] rangeValue];
 
   [textView.undoManager beginUndoGrouping];
@@ -283,8 +282,7 @@ static NSUInteger TextViewLineIndex(NSTextView *textView)
   return YES;
 }
 
-- (BOOL)XcodeMate_duplicateSelectionInTextView:(NSTextView *)textView
-{
+- (BOOL)XcodeMate_duplicateSelectionInTextView:(NSTextView *)textView {
   NSRange selectedRange = [[[textView selectedRanges] lastObject] rangeValue];
   if (selectedRange.length > 0) {
     NSString *selection =
@@ -325,8 +323,7 @@ static NSUInteger TextViewLineIndex(NSTextView *textView)
 @implementation NSDocument (XcodeMate)
 - (void)XcodeMate_saveDocumentWithDelegate:(id)delegate
                            didSaveSelector:(SEL)didSaveSelector
-                               contextInfo:(void *)contextInfo
-{
+                               contextInfo:(void *)contextInfo {
   if (!delegate) {
     delegate = self;
     didSaveSelector = @selector(XcodeMate_document:didSave:contextInfo:);
@@ -338,22 +335,16 @@ static NSUInteger TextViewLineIndex(NSTextView *textView)
 
 - (void)XcodeMate_document:(NSDocument *)document
                    didSave:(BOOL)didSave
-               contextInfo:(void *)contextInfo
-{
+               contextInfo:(void *)contextInfo {
   NSString *language = [[[self textStorage] language] identifier];
-  if (didSave && [XcodeMateLanguages containsObject:language]) {
-    NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
-    NSString *clangFormatPath =
-        [userDefaults objectForKey:@"XcodeMateClangFormatPath"];
-    if ([clangFormatPath isKindOfClass:[NSString class]]) {
-      [self performSelectorInBackground:@selector(XcodeMate_clangFormat:)
-                             withObject:clangFormatPath];
-    }
+  if (didSave && [ClangFormatPath length] &&
+      [XcodeMateLanguages containsObject:language]) {
+    [self performSelectorInBackground:@selector(XcodeMate_clangFormat:)
+                           withObject:ClangFormatPath];
   }
 }
 
-- (void)XcodeMate_clangFormat:(NSString *)clangFormatPath
-{
+- (void)XcodeMate_clangFormat:(NSString *)clangFormatPath {
   NSFileManager *fileManager = [NSFileManager defaultManager];
   NSString *path = [[self fileURL] path];
 
@@ -392,8 +383,7 @@ static NSUInteger TextViewLineIndex(NSTextView *textView)
 #pragma mark - Plugin startup
 
 @implementation XcodeMate
-+ (void)pluginDidLoad:(NSBundle *)bundle
-{
++ (void)pluginDidLoad:(NSBundle *)bundle {
   NSString *bundleIdentifier = [[NSBundle mainBundle] bundleIdentifier];
 
   // Xcode 4 support
@@ -424,28 +414,6 @@ static NSUInteger TextViewLineIndex(NSTextView *textView)
                                                      didSaveSelector:
                                                          contextInfo:)];
 
-  NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
-  NSString *ovalue;
-  if ((ovalue = [userDefaults objectForKey:@"XcodeMateSpaceGlyph"]) &&
-      [ovalue isKindOfClass:[NSString class]]) {
-    SpaceGlyph = ovalue;
-  }
-  if ((ovalue = [userDefaults objectForKey:@"XcodeMateTabGlyph"]) &&
-      [ovalue isKindOfClass:[NSString class]]) {
-    TabGlyph = ovalue;
-  }
-  if ((ovalue = [userDefaults objectForKey:@"XcodeMateReturnGlyph"]) &&
-      [ovalue isKindOfClass:[NSString class]]) {
-    ReturnGlyph = ovalue;
-  }
-  double dvalue;
-  if ((dvalue = [userDefaults doubleForKey:@"XcodeMateWhitespaceGray"])) {
-    WhitespaceGray = dvalue;
-  }
-  if ((dvalue = [userDefaults doubleForKey:@"XcodeMateWhitespaceAlpha"])) {
-    WhitespaceAlpha = dvalue;
-  }
-
   XcodeMateLanguages = [[NSSet alloc]
       initWithObjects:@"Xcode.SourceCodeLanguage.C", // Xcode 4
                       @"Xcode.SourceCodeLanguage.C++",
@@ -453,14 +421,62 @@ static NSUInteger TextViewLineIndex(NSTextView *textView)
                       @"Xcode.SourceCodeLanguage.Objective-C++",
                       @"Xcode.SourceCodeLanguage.Objective-J",
                       @"Xcode.SourceCodeLanguage.JavaScript", nil];
-  WhitespaceAttributes = [[NSDictionary alloc]
-      initWithObjectsAndKeys:[NSColor colorWithDeviceWhite:WhitespaceGray
-                                                     alpha:WhitespaceAlpha],
-                             NSForegroundColorAttributeName, nil];
 #if DEBUG
   NSLog(@"XcodeMate %@ loaded.",
         [[NSBundle mainBundle]
             objectForInfoDictionaryKey:(NSString *)kCFBundleVersionKey]);
 #endif
+
+  [self userDefaultsDidChange:nil];
+
+  NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
+  [center addObserver:self
+             selector:@selector(userDefaultsDidChange:)
+                 name:NSUserDefaultsDidChangeNotification
+               object:nil];
 }
+
+#define LOAD_STRING_DEFAULT(name)                                              \
+  if ((ovalue = [userDefaults objectForKey:@"XcodeMate" @ #name]) &&           \
+      [ovalue isKindOfClass:[NSString class]] &&                               \
+      ![name isEqualToString:ovalue]) {                                        \
+    [name release];                                                            \
+    name = [ovalue copy];                                                      \
+  } else if (![name isEqualToString:Default##name]) {                          \
+    [name release];                                                            \
+    name = [Default##name copy];                                               \
+  }
+
+#define LOAD_DOUBLE_DEFAULT(name, modified)                                    \
+  if ((dvalue = [userDefaults doubleForKey:@"XcodeMate" @ #name]) &&           \
+      dvalue != WhitespaceAlpha) {                                             \
+    name = dvalue;                                                             \
+    modified = YES;                                                            \
+  }
+
++ (void)userDefaultsDidChange:(NSNotification *)notification {
+  [WhitespaceAttributes release];
+
+  NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+
+  NSString *ovalue;
+  LOAD_STRING_DEFAULT(SpaceGlyph);
+  LOAD_STRING_DEFAULT(TabGlyph);
+  LOAD_STRING_DEFAULT(ReturnGlyph);
+  LOAD_STRING_DEFAULT(ClangFormatPath);
+
+  BOOL whitespaceModified = NO;
+  double dvalue;
+  LOAD_DOUBLE_DEFAULT(WhitespaceGray, whitespaceModified);
+  LOAD_DOUBLE_DEFAULT(WhitespaceAlpha, whitespaceModified);
+
+  if (whitespaceModified) {
+    [WhitespaceAttributes release];
+    WhitespaceAttributes = [[NSDictionary alloc]
+        initWithObjectsAndKeys:[NSColor colorWithDeviceWhite:WhitespaceGray
+                                                       alpha:WhitespaceAlpha],
+                               NSForegroundColorAttributeName, nil];
+  }
+}
+
 @end
