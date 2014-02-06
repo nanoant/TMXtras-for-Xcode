@@ -1,30 +1,107 @@
-# What is it?
+# XcodeMate
 
-This is a *fork* of excellent Ciarán Walsh's xcode plug-in which makes writing Obj-C easier, by automatically inserting paired message sending brackets.
-Watch [the screencast](http://ciaranwal.sh/files/xcode-bracket-matcher.mov) to see how it works.
+## What is it?
 
-# What's new?
+This is a *fork* of excellent Ciarán Walsh's Xcode plug-in which makes writing
+Objective-C code easier, by automatically inserting paired message sending
+brackets.
 
-This *fork* adds *Xcode 4* support and some extra features that makes *Xcode* editing feel more like *TextMate*:
+Watch [the screencast](http://ciaranwal.sh/files/xcode-bracket-matcher.mov) to
+see how it works.
 
-* **Auto closing of brackets and quotes:** When you open a bracket or (double)quote, the plugin closes it for you and places the cursor (insertion point) between brackets (quotes).
+## What's new?
 
-* **Auto deletion of both brackets:** When the cursor (insertion point) is between empty brackets (quotes), pressing backspace (delete) removes them both.
+This *fork* adds *Xcode 4* support and some extra features that makes *Xcode*
+editing feel more like *TextMate*:
 
-* **`]` always wraps:** Pressing `]` when there is something selected, wraps the selection with square brackets, rather than replacing whole selection with `]`.
+* **Auto closing of brackets and quotes**
 
-* **Whitespace display:** This is well known *TextMate* feature I missed most in *Xcode*, now *Xcode* displays whitespaces (aka invisibles) with similar glyphs as *TextMate* using light-grey color.
+  When you open a bracket or (double)quote, the plugin closes it for you and
+  places the cursor (insertion point) between brackets (quotes).
 
-# Installation
+* **Auto deletion of both brackets**
+
+  When the cursor (insertion point) is between empty brackets (quotes),
+  pressing backspace (delete) removes them both.
+
+* **`]` always wraps**
+
+  Pressing `]` when there is something selected, wraps the selection with
+  square brackets, rather than replacing whole selection with `]`.
+
+* **Whitespace display:**
+
+  This is well known *TextMate* feature I missed most in *Xcode*, now *Xcode*
+  displays whitespaces (aka invisibles) with similar glyphs as *TextMate* using
+  light-grey color.
+
+* **Whitespace display**
+
+  This is well known *TextMate* feature I missed most in *Xcode*, now *Xcode*
+  displays whitespaces (aka invisibles) with similar glyphs as *TextMate* using
+  light-grey color.
+
+Original functionality:
+
+* **Wrap on `]`**
+
+  When editing an Objective-C(++) or Objective-J file, you can type a `]` to
+  add a message to the current line. The plug-in will automatically look
+  backwards to insert the opening bracket at the appropriate location.
+
+## Installation
 
 1. Open the project and build the plug-in.
-2. After a successful build the plug-in should automatically be installed; to install it manually move the product (`XcodeBracketMatcher.pbplugin`) to `~/Library/Application Support/Developer/Shared/Xcode/Plug-ins` (create the directory if necessary).
+
+2. After a successful build the plug-in should automatically be installed; to
+   install it manually move the product (`XcodeBracketMatcher.pbplugin`) to
+   `~/Library/Application Support/Developer/Shared/Xcode/Plug-ins` (create the
+   directory if necessary).
+
 3. Restart Xcode.
 
-# Usage
+## Settings
 
-When editing an Objective-C(++) or Objective-J file, you can type a `]` to add a message to the current line. The plug-in will automatically look backwards to insert the opening bracket at the appropriate location.
+All settings of this plugin are accessible via `defaults`. Restart should be
+not required normally when changing these defaults.
 
-# Credit
+Values shown here are the default built-in values.
 
-The bracket placement logic (i.e. most of the hard work) was already done by Joachim Mårtensson for the Objective-C TextMate bundle, found here inside the `parser.rb` script.
+* `defaults write -app Xcode XcodeClangFormatPath ""` (empty to disable)
+* `defaults write -app Xcode XcodeMateSpaceGlyph ""` (empty to hide)
+* `defaults write -app Xcode XcodeMateTabGlyph "\u254E"`  (empty to hide)
+* `defaults write -app Xcode XcodeMateReturnGlyph "\u00AC"`  (empty to hide)
+* `defaults write -app Xcode XcodeMateWhitespaceGray -float 0.6`
+* `defaults write -app Xcode XcodeMateWhitespaceAlpha -float 0.25`
+
+## Credits
+
+* **Joachim Mårtensson**
+
+  The bracket placement logic (i.e. most of the hard work) was already done by
+  Joachim Mårtensson for the Objective-C TextMate bundle, found here inside the
+  `parser.rb` script.
+
+## License
+
+This software is provided under *MIT* license:
+
+> Copyright (c) 2009 Ciarán Walsh, 2010-2014 Adam Strzelecki
+>
+> Permission is hereby granted, free of charge, to any person obtaining a copy
+> of this software and associated documentation files (the "Software"), to deal
+> in the Software without restriction, including without limitation the rights
+> to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+> copies of the Software, and to permit persons to whom the Software is
+> furnished to do so, subject to the following conditions:
+>
+> The above copyright notice and this permission notice shall be included in
+> all copies or substantial portions of the Software.
+>
+> THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+> IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+> FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+> AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+> LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+> OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+> SOFTWARE.

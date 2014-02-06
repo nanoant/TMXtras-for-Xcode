@@ -25,6 +25,10 @@
 #import "XcodeMate.h"
 #import <objc/runtime.h>
 
+////////////////////////////////////////////////////////////////////////////////
+
+#pragma mark - Portions of Xcode interface
+
 @interface DVTSourceCodeLanguage : NSObject
 - (NSString *)identifier;
 @end
@@ -60,6 +64,10 @@
 - (BOOL)isInlineCompleting;
 @end
 
+////////////////////////////////////////////////////////////////////////////////
+
+#pragma mark - Helpers
+
 @implementation NSObject (XcodeMate)
 + (BOOL)XcodeMate_swizzle:(SEL)original with:(SEL)replacement
 {
@@ -80,18 +88,26 @@
 }
 @end
 
+////////////////////////////////////////////////////////////////////////////////
+
+#pragma mark - Default settings
+
 static NSSet *XcodeMateLanguages;
 static NSDictionary *WhitespaceAttributes;
 static NSString *OpeningsClosings = @"\"\"''()[]";
 
 static NSString *SpaceGlyph = @"";    // @"\u2022"
-static NSString *TabGlyph = @"\u254e"; // @"\u25B8";
+static NSString *TabGlyph = @"\u254E"; // @"\u25B8";
 static NSString *ReturnGlyph = @"\u00AC";
 
 static CGFloat WhitespaceGray = 0.6;
 static CGFloat WhitespaceAlpha = 0.25;
 
 #define kBracketsLocation 4
+
+////////////////////////////////////////////////////////////////////////////////
+
+#pragma mark - Draw invisibles
 
 @implementation NSLayoutManager (XcodeMate)
 - (void)XcodeMate_drawGlyphsForGlyphRange:(NSRange)glyphRange
@@ -141,6 +157,10 @@ static CGFloat WhitespaceAlpha = 0.25;
   [self XcodeMate_drawGlyphsForGlyphRange:glyphRange atPoint:containerOrigin];
 }
 @end
+
+////////////////////////////////////////////////////////////////////////////////
+
+#pragma mark - Bracket marching & duplication
 
 @implementation NSTextView (XcodeMate)
 - (void)XcodeMate_changeColor:(id)sender
@@ -298,6 +318,10 @@ static NSUInteger TextViewLineIndex(NSTextView *textView)
 }
 @end
 
+////////////////////////////////////////////////////////////////////////////////
+
+#pragma mark - Clang-format on-save
+
 @implementation NSDocument (XcodeMate)
 - (void)XcodeMate_saveDocumentWithDelegate:(id)delegate
                            didSaveSelector:(SEL)didSaveSelector
@@ -362,6 +386,10 @@ static NSUInteger TextViewLineIndex(NSTextView *textView)
 }
 
 @end
+
+////////////////////////////////////////////////////////////////////////////////
+
+#pragma mark - Plugin startup
 
 @implementation XcodeMate
 + (void)pluginDidLoad:(NSBundle *)bundle
