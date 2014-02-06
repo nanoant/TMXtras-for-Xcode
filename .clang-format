@@ -1,0 +1,6 @@
+---
+BasedOnStyle: LLVM
+BreakBeforeBraces: Linux
+AllowShortIfStatementsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: false
+...
