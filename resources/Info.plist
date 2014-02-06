@@ -4,12 +4,13 @@
 	CFBundleInfoDictionaryVersion = "6.0";
 	CFBundleName                  = "${PRODUCT_NAME}";
 	CFBundlePackageType           = "BNDL";
-	CFBundleShortVersionString    = "1.2";
-	CFBundleVersion               = "1.2";
+	CFBundleShortVersionString    = "1.3";
+	CFBundleVersion               = "1.3";
 	NSPrincipalClass              = "XcodeMate";
 	"XC4Compatible"               = "YES";
 	XCGCReady                     = "YES";
 	XCPluginHasUI                 = "NO";
 	DVTPlugInCompatibilityUUIDs   = ( "63FC1C47-140D-42B0-BB4D-A10B2D225574",
-	                                  "37B30044-3B14-46BA-ABAA-F01000C27B63" );
+	                                  "37B30044-3B14-46BA-ABAA-F01000C27B63",
+	                                  "640F884E-CE55-4B40-87C0-8869546CAB7A" );
 }

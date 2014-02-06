@@ -6,22 +6,61 @@
 //
 
 #import "XcodeMate.h"
-#import "JRSwizzle.h"
+#import <objc/runtime.h>
 
-@interface NSObject (DevToolsInterfaceAdditions)
-// XCTextStorageAdditions
-- (id)language;
+@interface DVTSourceCodeLanguage : NSObject
+- (NSString *)identifier;
+@end
 
-// XCSourceModel
-- (id)sourceModel;
+@interface DVTFilePath : NSObject
+- (void)_notifyAssociatesOfChange;
+@end
+
+@interface XCSourceModel : NSObject
 - (BOOL)isInStringConstantAtLocation:(NSUInteger)index;
+@end
 
-// XCSourceCodeTextView
+@interface NSTextStorage (XcodeMate_DVTSourceTextStorage)
+- (void)replaceCharactersInRange:(NSRange)range
+                      withString:(NSString *)string
+                 withUndoManager:(id)undoManager;
+- (NSRange)lineRangeForCharacterRange:(NSRange)range;
+- (NSRange)characterRangeForLineRange:(NSRange)range;
+- (void)indentCharacterRange:(NSRange)range undoManager:(id)undoManager;
+- (DVTSourceCodeLanguage *)language;
+- (XCSourceModel *)sourceModel;
+@end
+
+@interface NSDocument (XcodeMate_IDESourceCodeDocument)
+- (NSUndoManager *)undoManager;
+- (NSTextStorage *)textStorage;
+- (void)_respondToFileChangeOnDiskWithFilePath:(DVTFilePath *)filePath;
+- (DVTFilePath *)filePath;
+- (void)ide_revertDocumentToSaved:(id)sender;
+@end
+
+@interface NSTextView (XcodeMate_DVTSourceTextView)
 - (BOOL)isInlineCompleting;
-- (id)codeAssistant;
+@end
 
-// DVTSourceCodeLanguage
-- (id)identifier;
+@implementation NSObject (XcodeMate)
++ (BOOL)XcodeMate_swizzle:(SEL)original with:(SEL)replacement
+{
+	Method originalMethod = class_getInstanceMethod(self, original);
+	if (!originalMethod) {
+		NSLog(@"XcodeMate error: original method -[%@ %@] not found",
+			NSStringFromClass(self), NSStringFromSelector(original));
+		return NO;
+	}
+	Method replacementMethod = class_getInstanceMethod(self, replacement);
+	if (!replacementMethod) {
+		NSLog(@"XcodeMate error: replacement method -[%@ %@] not found",
+			NSStringFromClass(self), NSStringFromSelector(replacement));
+		return NO;
+	}
+	method_exchangeImplementations(originalMethod, replacementMethod);
+	return YES;
+}
 @end
 
 static NSSet *XcodeMateLanguages;
@@ -101,10 +140,7 @@ static CGFloat WhitespaceAlpha = 0.25;
 	} else {
 		NSRange range = [OpeningsClosings rangeOfString:event.characters];
 		if(range.length == 1 && range.location % 2 == 0) {
-			NSString *language = [[self textStorage] language];
-			if(![language isKindOfClass:[NSString class]]) {
-				language = [language identifier];
-			}
+			NSString *language = [[[self textStorage] language] identifier];
 			if([XcodeMateLanguages containsObject:language]) {
 				NSRange selectedRange = [[[self selectedRanges] lastObject] rangeValue];
 				if(![[[self textStorage] sourceModel] isInStringConstantAtLocation:selectedRange.location] ||
@@ -133,21 +169,17 @@ static CGFloat WhitespaceAlpha = 0.25;
 
 - (void)XcodeMate_deleteBackward:(NSEvent*)event
 {
-	NSTextView *textView = self;
-	NSRange selectedRange = [[[textView selectedRanges] lastObject] rangeValue];
+	NSRange selectedRange = [[[self selectedRanges] lastObject] rangeValue];
 	if(selectedRange.length == 0) {
 		NSRange checkRange = NSMakeRange(selectedRange.location - 1, 2);
 		@try {
-			NSString *substring = [[[textView textStorage] string] substringWithRange:checkRange];
+			NSString *substring = [[[self textStorage] string] substringWithRange:checkRange];
 			NSRange range = [OpeningsClosings rangeOfString:substring];
 			if(range.length == 2 && range.location % 2 == 0) {
-				NSString *language = [[self textStorage] language];
-				if(![language isKindOfClass:[NSString class]]) {
-					language = [language identifier];
-				}
+				NSString *language = [[[self textStorage] language] identifier];
 				if([XcodeMateLanguages containsObject:language]) {
-					[textView moveForward:event];
-					[textView XcodeMate_deleteBackward:event];
+					[self moveForward:event];
+					[self XcodeMate_deleteBackward:event];
 				}
 			}
 		} @catch(NSException *e) {
@@ -159,7 +191,7 @@ static CGFloat WhitespaceAlpha = 0.25;
 	[self XcodeMate_deleteBackward:event];
 }
 
-static NSUInteger TextViewLineIndex (NSTextView *textView)
+static NSUInteger TextViewLineIndex(NSTextView *textView)
 {
 	NSRange selectedRange = [[[textView selectedRanges] lastObject] rangeValue];
 	NSUInteger res        = selectedRange.location;
@@ -225,50 +257,77 @@ static NSUInteger TextViewLineIndex (NSTextView *textView)
 }
 @end
 
-@implementation XcodeMate
+@implementation NSDocument (XcodeMate)
+- (void)XcodeMate_saveDocumentWithDelegate:(id)delegate didSaveSelector:(SEL)didSaveSelector contextInfo:(void *)contextInfo
+{
+	if (!delegate) {
+		delegate = self;
+		didSaveSelector = @selector(XcodeMate_document:didSave:contextInfo:);
+	}
+	[self XcodeMate_saveDocumentWithDelegate:delegate didSaveSelector:didSaveSelector contextInfo:contextInfo];
+}
 
+- (void)XcodeMate_document:(NSDocument *)document didSave:(BOOL)didSave contextInfo:(void *)contextInfo
+{
+	NSString *language = [[[self textStorage] language] identifier];
+	if(didSave && [XcodeMateLanguages containsObject:language]) {
+		NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+		NSString *clangFormatPath = [userDefaults objectForKey:@"XcodeMateClangFormatPath"];
+		if ([clangFormatPath isKindOfClass:[NSString class]]) {
+			[self performSelectorInBackground:@selector(XcodeMate_clangFormat:) withObject:clangFormatPath];
+		}
+	}
+}
+
+- (void)XcodeMate_clangFormat:(NSString *)clangFormatPath
+{
+	NSFileManager *fileManager = [NSFileManager defaultManager];
+	NSString *path = [[self fileURL] path];
+
+	NSData *beforeData = [NSData dataWithContentsOfFile:path];
+	NSDictionary *before = [fileManager attributesOfItemAtPath:path error:NULL];
+
+	NSTask *task = [[NSTask alloc] init];
+	[task setLaunchPath:clangFormatPath];
+	NSArray *arguments = [NSArray arrayWithObjects:@"-i", @"-style=file",
+		@"-fallback-style=none", path, nil];
+	[task setArguments:arguments];
+	[task launch];
+	[task waitUntilExit];
+	[task release];
+
+	NSDictionary *after = [fileManager attributesOfItemAtPath:path error:NULL];
+	NSData *afterData = [NSData dataWithContentsOfFile:path];
+
+	// this is workaround for Xcode not reloading file if modification date
+	// is the same as saved one, which can happen if we reformat in same second.
+	if (![afterData isEqualToData:beforeData] && before && [after.fileModificationDate isEqualToDate:before.fileModificationDate]) {
+		NSDictionary *attributes = [NSDictionary dictionaryWithObjectsAndKeys:
+		                                      [after.fileModificationDate dateByAddingTimeInterval:1], NSFileModificationDate, nil];
+		[fileManager setAttributes:attributes ofItemAtPath:path error:NULL];
+	}
+}
+
+@end
+
+@implementation XcodeMate
 + (void)pluginDidLoad:(NSBundle *)bundle
 {
 	NSString *bundleIdentifier = [[NSBundle mainBundle] bundleIdentifier];
+
 	// Xcode 4 support
-	if(![bundleIdentifier isEqualToString:@"com.apple.Xcode"]) {
-		if(![bundleIdentifier isEqualToString:@"com.apple.dt.Xcode"]) {
-			if(bundleIdentifier.length) {
-				// complain only when there's bundle identifier
-				NSLog(@"XcodeMate unknown bundle identifier: %@", bundleIdentifier);
-			}
-			return;
+	if(![bundleIdentifier isEqualToString:@"com.apple.dt.Xcode"]) {
+		if(bundleIdentifier.length) {
+			// complain only when there's bundle identifier
+			NSLog(@"XcodeMate unknown bundle identifier: %@", bundleIdentifier);
 		}
-		NSError *error = nil;
-		if(![NSClassFromString(@"DVTSourceTextView") jr_swizzleMethod:@selector(changeColor:) withMethod:@selector(XcodeMate_changeColor:) error:&error]) {
-			NSLog(@"XcodeMate failed to swizzle `-[DVTSourceTextView changeColor:]', %@", [error localizedDescription]);
-		}
-		error = nil;
-		if(![NSClassFromString(@"DVTSourceTextView") jr_swizzleMethod:@selector(keyDown:) withMethod:@selector(XcodeMate_keyDown:) error:&error]) {
-			NSLog(@"XcodeMate failed to swizzle `-[DVTSourceTextView keyDown:]', %@", [error localizedDescription]);
-		}
-		error = nil;
-		if(![NSClassFromString(@"DVTSourceTextView") jr_swizzleMethod:@selector(deleteBackward:) withMethod:@selector(XcodeMate_deleteBackward:) error:&error]) {
-			NSLog(@"XcodeMate failed to swizzle `-[DVTSourceTextView deleteBackward:]', %@", [error localizedDescription]);
-		}
-		error = nil;
-		if(![NSClassFromString(@"DVTLayoutManager") jr_swizzleMethod:@selector(drawGlyphsForGlyphRange:atPoint:) withMethod:@selector(XcodeMate_drawGlyphsForGlyphRange:atPoint:) error:&error]) {
-			NSLog(@"XcodeMate failed to swizzle `-[DVTLayoutManager drawGlyphsForGlyphRange:atPoint:]', %@", [error localizedDescription]);
-		}
-	} else { // Xcode 3.x support
-		NSError *error = nil;
-		if(![NSClassFromString(@"XCSourceCodeTextView") jr_swizzleMethod:@selector(keyDown:) withMethod:@selector(XcodeMate_keyDown:) error:&error]) {
-			NSLog(@"XcodeMate failed to swizzle `-[XCSourceCodeTextView keyDown:]', %@", [error localizedDescription]);
-		}
-		error = nil;
-		if(![NSClassFromString(@"XCSourceCodeTextView") jr_swizzleMethod:@selector(deleteBackward:) withMethod:@selector(XcodeMate_deleteBackward:) error:&error]) {
-			NSLog(@"XcodeMate failed to swizzle `-[XCSourceCodeTextView deleteBackward:]', %@", [error localizedDescription]);
-		}
-		error = nil;
-		if(![NSClassFromString(@"XCLayoutManager") jr_swizzleMethod:@selector(drawGlyphsForGlyphRange:atPoint:) withMethod:@selector(XcodeMate_drawGlyphsForGlyphRange:atPoint:) error:&error]) {
-			NSLog(@"XcodeMate failed to swizzle `-[XCLayoutManager drawGlyphsForGlyphRange:atPoint:]', %@", [error localizedDescription]);
-		}
+		return;
 	}
+	[NSClassFromString(@"DVTSourceTextView") XcodeMate_swizzle:@selector(changeColor:) with:@selector(XcodeMate_changeColor:)];
+	[NSClassFromString(@"DVTSourceTextView") XcodeMate_swizzle:@selector(keyDown:) with:@selector(XcodeMate_keyDown:)];
+	[NSClassFromString(@"DVTSourceTextView") XcodeMate_swizzle:@selector(deleteBackward:) with:@selector(XcodeMate_deleteBackward:)];
+	[NSClassFromString(@"DVTLayoutManager")  XcodeMate_swizzle:@selector(drawGlyphsForGlyphRange:atPoint:) with:@selector(XcodeMate_drawGlyphsForGlyphRange:atPoint:)];
+	[NSClassFromString(@"IDESourceCodeDocument") XcodeMate_swizzle:@selector(saveDocumentWithDelegate:didSaveSelector:contextInfo:) with:@selector(XcodeMate_saveDocumentWithDelegate:didSaveSelector:contextInfo:)];
 
 	NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
 	NSString *ovalue;
@@ -293,21 +352,16 @@ static NSUInteger TextViewLineIndex (NSTextView *textView)
 	}
 
 	XcodeMateLanguages = [[NSSet alloc] initWithObjects:
-						  @"xcode.lang.c", // Xcode 3
-						  @"xcode.lang.cpp",
-						  @"xcode.lang.objcpp",
-						  @"xcode.lang.objc",
-						  @"xcode.lang.objj",
-						  @"Xcode.SourceCodeLanguage.C", // Xcode 4
-						  @"Xcode.SourceCodeLanguage.C++",
-						  @"Xcode.SourceCodeLanguage.Objective-C",
-						  @"Xcode.SourceCodeLanguage.Objective-C++",
-						  @"Xcode.SourceCodeLanguage.Objective-J",
-						  nil];
+		@"Xcode.SourceCodeLanguage.C", // Xcode 4
+		@"Xcode.SourceCodeLanguage.C++",
+		@"Xcode.SourceCodeLanguage.Objective-C",
+		@"Xcode.SourceCodeLanguage.Objective-C++",
+		@"Xcode.SourceCodeLanguage.Objective-J",
+		@"Xcode.SourceCodeLanguage.JavaScript",
+		nil];
 	WhitespaceAttributes = [[NSDictionary alloc] initWithObjectsAndKeys:[NSColor colorWithDeviceWhite:WhitespaceGray alpha:WhitespaceAlpha], NSForegroundColorAttributeName, nil];
 #if DEBUG
 	NSLog(@"XcodeMate %@ loaded.", [[NSBundle mainBundle] objectForInfoDictionaryKey:(NSString *)kCFBundleVersionKey]);
 #endif
 }
-
 @end
