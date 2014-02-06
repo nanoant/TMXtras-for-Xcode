@@ -427,21 +427,26 @@ static NSUInteger TextViewLineIndex(NSTextView *textView) {
             objectForInfoDictionaryKey:(NSString *)kCFBundleVersionKey]);
 #endif
 
-  [self userDefaultsDidChange:nil];
+  NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+  [self userDefaultsDidChange:
+            [NSNotification
+                notificationWithName:NSUserDefaultsDidChangeNotification
+                              object:userDefaults]];
 
   NSNotificationCenter *center = [NSNotificationCenter defaultCenter];
   [center addObserver:self
              selector:@selector(userDefaultsDidChange:)
                  name:NSUserDefaultsDidChangeNotification
-               object:nil];
+               object:userDefaults];
 }
 
 #define LOAD_STRING_DEFAULT(name)                                              \
   if ((ovalue = [userDefaults objectForKey:@"XcodeMate" @ #name]) &&           \
-      [ovalue isKindOfClass:[NSString class]] &&                               \
-      ![name isEqualToString:ovalue]) {                                        \
-    [name release];                                                            \
-    name = [ovalue copy];                                                      \
+      [ovalue isKindOfClass:[NSString class]]) {                               \
+    if (!name || ![name isEqualToString:ovalue]) {                             \
+      [name release];                                                          \
+      name = [ovalue copy];                                                    \
+    }                                                                          \
   } else if (![name isEqualToString:Default##name]) {                          \
     [name release];                                                            \
     name = [Default##name copy];                                               \
@@ -455,7 +460,7 @@ static NSUInteger TextViewLineIndex(NSTextView *textView) {
   }
 
 + (void)userDefaultsDidChange:(NSNotification *)notification {
-  NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+  NSUserDefaults *userDefaults = (NSUserDefaults *)[notification object];
 
   NSString *ovalue;
   LOAD_STRING_DEFAULT(SpaceGlyph);
