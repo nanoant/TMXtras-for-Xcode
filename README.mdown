@@ -54,9 +54,9 @@ Original functionality:
 1. Open the project and build the plug-in.
 
 2. After a successful build the plug-in should automatically be installed; to
-   install it manually move the product (`XcodeBracketMatcher.pbplugin`) to
-   `~/Library/Application Support/Developer/Shared/Xcode/Plug-ins` (create the
-   directory if necessary).
+install it manually move the product (`XcodeMate.pbplugin`) to
+`~/Library/Application Support/Developer/Shared/Xcode/Plug-ins` (create the
+directory if necessary).
 
 3. Restart Xcode.
 
