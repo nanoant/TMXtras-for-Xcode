@@ -455,8 +455,6 @@ static NSUInteger TextViewLineIndex(NSTextView *textView) {
   }
 
 + (void)userDefaultsDidChange:(NSNotification *)notification {
-  [WhitespaceAttributes release];
-
   NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
 
   NSString *ovalue;
@@ -470,7 +468,7 @@ static NSUInteger TextViewLineIndex(NSTextView *textView) {
   LOAD_DOUBLE_DEFAULT(WhitespaceGray, whitespaceModified);
   LOAD_DOUBLE_DEFAULT(WhitespaceAlpha, whitespaceModified);
 
-  if (whitespaceModified) {
+  if (whitespaceModified || !WhitespaceAttributes) {
     [WhitespaceAttributes release];
     WhitespaceAttributes = [[NSDictionary alloc]
         initWithObjectsAndKeys:[NSColor colorWithDeviceWhite:WhitespaceGray
