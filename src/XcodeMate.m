@@ -198,8 +198,12 @@ static CGFloat WhitespaceAlpha = 0.25;
             // whitespace
             BOOL nextBracketSame = NO;
             if (!selectedRange.length) {
-              NSString *nextCharacter = [[[self textStorage] string]
-                  substringWithRange:NSMakeRange(selectedRange.location, 1)];
+              NSString *string = [[self textStorage] string];
+              NSString *nextCharacter = nil;
+              if (string.length) {
+                nextCharacter = [string
+                    substringWithRange:NSMakeRange(selectedRange.location, 1)];
+              }
               if ([nextCharacter
                       isEqualToString:[OpeningsClosings
                                           substringWithRange:range]]) {
