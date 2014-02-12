@@ -69,7 +69,8 @@
 #pragma mark - Helpers
 
 @implementation NSObject (XcodeMate)
-+ (BOOL)XcodeMate_swizzle:(SEL)original with:(SEL)replacement {
++ (BOOL)XcodeMate_swizzle:(SEL)original with:(SEL)replacement
+{
   Method originalMethod = class_getInstanceMethod(self, original);
   if (!originalMethod) {
     NSLog(@"XcodeMate error: original method -[%@ %@] not found",
@@ -116,7 +117,8 @@ static CGFloat WhitespaceAlpha = 0.25;
 
 @implementation NSLayoutManager (XcodeMate)
 - (void)XcodeMate_drawGlyphsForGlyphRange:(NSRange)glyphRange
-                                  atPoint:(NSPoint)containerOrigin {
+                                  atPoint:(NSPoint)containerOrigin
+{
   NSString *docContents = [[self textStorage] string];
   // Loop thru current range, drawing glyphs
   for (int i = glyphRange.location; i < NSMaxRange(glyphRange); i++) {
@@ -167,13 +169,15 @@ static CGFloat WhitespaceAlpha = 0.25;
 #pragma mark - Bracket marching & duplication
 
 @implementation NSTextView (XcodeMate)
-- (void)XcodeMate_changeColor:(id)sender {
+- (void)XcodeMate_changeColor:(id)sender
+{
   if (![sender isKindOfClass:[NSColorPanel class]]) {
     [self XcodeMate_changeColor:sender];
   }
 }
 
-- (void)XcodeMate_keyDown:(NSEvent *)event {
+- (void)XcodeMate_keyDown:(NSEvent *)event
+{
   BOOL didInsert = NO;
   if ([event.charactersIgnoringModifiers isEqualToString:@"D"] &&
       ([event modifierFlags] & NSControlKeyMask)) {
@@ -181,56 +185,66 @@ static CGFloat WhitespaceAlpha = 0.25;
   } else {
     NSRange range = [OpeningsClosings rangeOfString:event.characters];
     if (range.length == 1 && range.location % 2 == 0) {
-      NSString *language = [[[self textStorage] language] identifier];
-      if ([XcodeMateLanguages containsObject:language]) {
-        NSRange selectedRange = [[[self selectedRanges] lastObject] rangeValue];
-        if (![[[self textStorage] sourceModel]
-                isInStringConstantAtLocation:selectedRange.location] ||
-            range.location >= kBracketsLocation) {
-          // ensure we insert brackets closing only when next character is
-          // whitespace
-          BOOL nextBracketSame = NO;
-          if (!selectedRange.length) {
-            NSString *nextCharacter = [[[self textStorage] string]
-                substringWithRange:NSMakeRange(selectedRange.location, 1)];
-            if ([nextCharacter isEqualToString:[OpeningsClosings
-                                                   substringWithRange:range]]) {
-              nextBracketSame = YES;
+      NSTextStorage *textStorage = [self textStorage];
+      if ([textStorage respondsToSelector:@selector(language)]) {
+        NSString *language = [[textStorage language] identifier];
+        if ([XcodeMateLanguages containsObject:language]) {
+          NSRange selectedRange =
+              [[[self selectedRanges] lastObject] rangeValue];
+          if (![[[self textStorage] sourceModel]
+                  isInStringConstantAtLocation:selectedRange.location] ||
+              range.location >= kBracketsLocation) {
+            // ensure we insert brackets closing only when next character is
+            // whitespace
+            BOOL nextBracketSame = NO;
+            if (!selectedRange.length) {
+              NSString *nextCharacter = [[[self textStorage] string]
+                  substringWithRange:NSMakeRange(selectedRange.location, 1)];
+              if ([nextCharacter
+                      isEqualToString:[OpeningsClosings
+                                          substringWithRange:range]]) {
+                nextBracketSame = YES;
+              }
             }
-          }
-          if (!nextBracketSame) {
-            range.location++;
-            NSString *closing = [OpeningsClosings substringWithRange:range];
-            didInsert = [self XcodeMate_insertForTextView:self
-                                                  opening:event.characters
-                                                  closing:closing];
+            if (!nextBracketSame) {
+              range.location++;
+              NSString *closing = [OpeningsClosings substringWithRange:range];
+              didInsert = [self XcodeMate_insertForTextView:self
+                                                    opening:event.characters
+                                                    closing:closing];
+            }
           }
         }
       }
     }
   }
 
-  if (!didInsert)
-    [self XcodeMate_keyDown:event];
+  if (!didInsert) [self XcodeMate_keyDown:event];
 }
 
-- (void)XcodeMate_deleteBackward:(NSEvent *)event {
+- (void)XcodeMate_deleteBackward:(NSEvent *)event
+{
   NSRange selectedRange = [[[self selectedRanges] lastObject] rangeValue];
   if (selectedRange.length == 0) {
     NSRange checkRange = NSMakeRange(selectedRange.location - 1, 2);
-    @try {
+    @try
+    {
       NSString *substring =
           [[[self textStorage] string] substringWithRange:checkRange];
       NSRange range = [OpeningsClosings rangeOfString:substring];
       if (range.length == 2 && range.location % 2 == 0) {
-        NSString *language = [[[self textStorage] language] identifier];
-        if ([XcodeMateLanguages containsObject:language]) {
-          [self moveForward:event];
-          [self XcodeMate_deleteBackward:event];
+        NSTextStorage *textStorage = [self textStorage];
+        if ([textStorage respondsToSelector:@selector(language)]) {
+          NSString *language = [[textStorage language] identifier];
+          if ([XcodeMateLanguages containsObject:language]) {
+            [self moveForward:event];
+            [self XcodeMate_deleteBackward:event];
+          }
         }
       }
     }
-    @catch (NSException *e) {
+    @catch (NSException *e)
+    {
       if (![e.name isEqualToString:NSRangeException]) {
         [e raise];
       }
@@ -239,21 +253,22 @@ static CGFloat WhitespaceAlpha = 0.25;
   [self XcodeMate_deleteBackward:event];
 }
 
-static NSUInteger TextViewLineIndex(NSTextView *textView) {
+static NSUInteger TextViewLineIndex(NSTextView *textView)
+{
   NSRange selectedRange = [[[textView selectedRanges] lastObject] rangeValue];
   NSUInteger res = selectedRange.location;
   NSString *substring =
       [[[textView textStorage] string] substringToIndex:selectedRange.location];
   NSUInteger newline =
       [substring rangeOfString:@"\n" options:NSBackwardsSearch].location;
-  if (newline != NSNotFound)
-    res -= newline + 1;
+  if (newline != NSNotFound) res -= newline + 1;
   return res;
 }
 
 - (BOOL)XcodeMate_insertForTextView:(NSTextView *)textView
                             opening:(NSString *)opening
-                            closing:(NSString *)closing {
+                            closing:(NSString *)closing
+{
   NSRange selectedRange = [[[textView selectedRanges] lastObject] rangeValue];
 
   [textView.undoManager beginUndoGrouping];
@@ -282,7 +297,8 @@ static NSUInteger TextViewLineIndex(NSTextView *textView) {
   return YES;
 }
 
-- (BOOL)XcodeMate_duplicateSelectionInTextView:(NSTextView *)textView {
+- (BOOL)XcodeMate_duplicateSelectionInTextView:(NSTextView *)textView
+{
   NSRange selectedRange = [[[textView selectedRanges] lastObject] rangeValue];
   if (selectedRange.length > 0) {
     NSString *selection =
@@ -323,7 +339,8 @@ static NSUInteger TextViewLineIndex(NSTextView *textView) {
 @implementation NSDocument (XcodeMate)
 - (void)XcodeMate_saveDocumentWithDelegate:(id)delegate
                            didSaveSelector:(SEL)didSaveSelector
-                               contextInfo:(void *)contextInfo {
+                               contextInfo:(void *)contextInfo
+{
   if (!delegate) {
     delegate = self;
     didSaveSelector = @selector(XcodeMate_document:didSave:contextInfo:);
@@ -335,16 +352,23 @@ static NSUInteger TextViewLineIndex(NSTextView *textView) {
 
 - (void)XcodeMate_document:(NSDocument *)document
                    didSave:(BOOL)didSave
-               contextInfo:(void *)contextInfo {
-  NSString *language = [[[self textStorage] language] identifier];
-  if (didSave && [ClangFormatPath length] &&
-      [XcodeMateLanguages containsObject:language]) {
-    [self performSelectorInBackground:@selector(XcodeMate_clangFormat:)
-                           withObject:ClangFormatPath];
+               contextInfo:(void *)contextInfo
+{
+  if ([self respondsToSelector:@selector(textStorage)]) {
+    NSTextStorage *textStorage = [self textStorage];
+    if ([textStorage respondsToSelector:@selector(language)]) {
+      NSString *language = [[textStorage language] identifier];
+      if (didSave && [ClangFormatPath length] &&
+          [XcodeMateLanguages containsObject:language]) {
+        [self performSelectorInBackground:@selector(XcodeMate_clangFormat:)
+                               withObject:ClangFormatPath];
+      }
+    }
   }
 }
 
-- (void)XcodeMate_clangFormat:(NSString *)clangFormatPath {
+- (void)XcodeMate_clangFormat:(NSString *)clangFormatPath
+{
   NSFileManager *fileManager = [NSFileManager defaultManager];
   NSString *path = [[self fileURL] path];
 
@@ -383,7 +407,8 @@ static NSUInteger TextViewLineIndex(NSTextView *textView) {
 #pragma mark - Plugin startup
 
 @implementation XcodeMate
-+ (void)pluginDidLoad:(NSBundle *)bundle {
++ (void)pluginDidLoad:(NSBundle *)bundle
+{
   NSString *bundleIdentifier = [[NSBundle mainBundle] bundleIdentifier];
 
   // Xcode 4 support
@@ -459,7 +484,8 @@ static NSUInteger TextViewLineIndex(NSTextView *textView) {
     modified = YES;                                                            \
   }
 
-+ (void)userDefaultsDidChange:(NSNotification *)notification {
++ (void)userDefaultsDidChange:(NSNotification *)notification
+{
   NSUserDefaults *userDefaults = (NSUserDefaults *)[notification object];
 
   NSString *ovalue;
