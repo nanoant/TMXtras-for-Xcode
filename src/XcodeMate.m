@@ -446,8 +446,10 @@ static NSUInteger TextViewLineIndex(NSTextView *textView)
   XcodeMateLanguages = [[NSSet alloc]
       initWithObjects:@"Xcode.SourceCodeLanguage.C", // Xcode 4
                       @"Xcode.SourceCodeLanguage.C++",
+                      @"Xcode.SourceCodeLanguage.C-Plus-Plus",
                       @"Xcode.SourceCodeLanguage.Objective-C",
                       @"Xcode.SourceCodeLanguage.Objective-C++",
+                      @"Xcode.SourceCodeLanguage.Objective-C-Plus-Plus",
                       @"Xcode.SourceCodeLanguage.Objective-J",
                       @"Xcode.SourceCodeLanguage.JavaScript", nil];
 #if DEBUG
