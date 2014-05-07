@@ -1,3 +1,0 @@
-#!/bin/bash
-find . \( -name '*.pch' -or -name '*.h' -or -name '*.m' \) \
-	-exec clang-format -style=file -i {} +

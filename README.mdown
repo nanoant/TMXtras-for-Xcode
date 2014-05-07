@@ -1,4 +1,4 @@
-# XcodeMate
+# TextMate Xtras for Xcode
 
 ## What is it?
 
@@ -54,7 +54,7 @@ Original functionality:
 1. Open the project and build the plug-in.
 
 2. After a successful build the plug-in should automatically be installed; to
-install it manually move the product (`XcodeMate.pbplugin`) to
+install it manually move the product (`AMSXcodeTMXtras.xcplugin`) to
 `~/Library/Application Support/Developer/Shared/Xcode/Plug-ins` (create the
 directory if necessary).
 
@@ -67,12 +67,11 @@ not required normally when changing these defaults.
 
 Values shown here are the default built-in values.
 
-* `defaults write -app Xcode XcodeClangFormatPath ""` (empty to disable)
-* `defaults write -app Xcode XcodeMateSpaceGlyph ""` (empty to hide)
-* `defaults write -app Xcode XcodeMateTabGlyph "\u254E"`  (empty to hide)
-* `defaults write -app Xcode XcodeMateReturnGlyph "\u00AC"`  (empty to hide)
-* `defaults write -app Xcode XcodeMateWhitespaceGray -float 0.6`
-* `defaults write -app Xcode XcodeMateWhitespaceAlpha -float 0.25`
+* `defaults write -app Xcode AMSSpaceGlyph ""` (empty to hide)
+* `defaults write -app Xcode AMSTabGlyph "\u254E"`  (empty to hide)
+* `defaults write -app Xcode AMSReturnGlyph "\u00AC"`  (empty to hide)
+* `defaults write -app Xcode AMSWhitespaceGray -float 0.6`
+* `defaults write -app Xcode AMSWhitespaceAlpha -float 0.25`
 
 ## Credits
 

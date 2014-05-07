@@ -1,6 +1,6 @@
 //
-// XcodeMate.m
-// XcodeMate
+// AMSXcodeTMXtras.m
+// AMSXcodeTMXtras
 //
 // Copyright (c) 2009 Ciarán Walsh, 2010-2014 Adam Strzelecki
 //
@@ -22,8 +22,10 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#import "XcodeMate.h"
+#import "AMSXcodeTMXtras.h"
 #import <objc/runtime.h>
+
+#define PLUGIN @"AMSXcodeTMXtras"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -41,7 +43,7 @@
 - (BOOL)isInStringConstantAtLocation:(NSUInteger)index;
 @end
 
-@interface NSTextStorage (XcodeMate_DVTSourceTextStorage)
+@interface NSTextStorage (AMSXcodeTMXtras_DVTSourceTextStorage)
 - (void)replaceCharactersInRange:(NSRange)range
                       withString:(NSString *)string
                  withUndoManager:(id)undoManager;
@@ -52,7 +54,7 @@
 - (XCSourceModel *)sourceModel;
 @end
 
-@interface NSDocument (XcodeMate_IDESourceCodeDocument)
+@interface NSDocument (AMSXcodeTMXtras_IDESourceCodeDocument)
 - (NSUndoManager *)undoManager;
 - (NSTextStorage *)textStorage;
 - (void)_respondToFileChangeOnDiskWithFilePath:(DVTFilePath *)filePath;
@@ -60,51 +62,25 @@
 - (void)ide_revertDocumentToSaved:(id)sender;
 @end
 
-@interface NSTextView (XcodeMate_DVTSourceTextView)
+@interface NSTextView (AMSXcodeTMXtras_DVTSourceTextView)
 - (BOOL)isInlineCompleting;
-@end
-
-////////////////////////////////////////////////////////////////////////////////
-
-#pragma mark - Helpers
-
-@implementation NSObject (XcodeMate)
-+ (BOOL)XcodeMate_swizzle:(SEL)original with:(SEL)replacement
-{
-  Method originalMethod = class_getInstanceMethod(self, original);
-  if (!originalMethod) {
-    NSLog(@"XcodeMate error: original method -[%@ %@] not found",
-          NSStringFromClass(self), NSStringFromSelector(original));
-    return NO;
-  }
-  Method replacementMethod = class_getInstanceMethod(self, replacement);
-  if (!replacementMethod) {
-    NSLog(@"XcodeMate error: replacement method -[%@ %@] not found",
-          NSStringFromClass(self), NSStringFromSelector(replacement));
-    return NO;
-  }
-  method_exchangeImplementations(originalMethod, replacementMethod);
-  return YES;
-}
 @end
 
 ////////////////////////////////////////////////////////////////////////////////
 
 #pragma mark - Default settings
 
-static NSSet *XcodeMateLanguages = nil;
+static NSSet *SupportedLanguages = nil;
 static NSDictionary *WhitespaceAttributes = nil;
 static NSString *OpeningsClosings = @"\"\"''()[]";
 
 static NSString *SpaceGlyph = nil;
 static NSString *TabGlyph = nil;
 static NSString *ReturnGlyph = nil;
-static NSString *ClangFormatPath = nil;
 
 static NSString *DefaultSpaceGlyph /*******/ = nil;       // @"\u2022"
 static NSString *DefaultTabGlyph /*********/ = @"\u254E"; // @"\u25B8";
 static NSString *DefaultReturnGlyph /******/ = @"\u00AC";
-static NSString *DefaultClangFormatPath /**/ = nil;
 
 static CGFloat WhitespaceGray = 0.6;
 static CGFloat WhitespaceAlpha = 0.25;
@@ -115,9 +91,10 @@ static CGFloat WhitespaceAlpha = 0.25;
 
 #pragma mark - Draw invisibles
 
-@implementation NSLayoutManager (XcodeMate)
-- (void)XcodeMate_drawGlyphsForGlyphRange:(NSRange)glyphRange
-                                  atPoint:(NSPoint)containerOrigin
+@implementation NSLayoutManager (AMSXcodeTMXtras)
+
+- (void)AMSXcodeTMXtras_drawGlyphsForGlyphRange:(NSRange)glyphRange
+                                        atPoint:(NSPoint)containerOrigin
 {
   NSString *docContents = [[self textStorage] string];
   // Loop thru current range, drawing glyphs
@@ -160,148 +137,17 @@ static CGFloat WhitespaceAlpha = 0.25;
     glyphPoint.y = glyphRect.origin.y;
     [glyph drawAtPoint:glyphPoint withAttributes:WhitespaceAttributes];
   }
-  [self XcodeMate_drawGlyphsForGlyphRange:glyphRange atPoint:containerOrigin];
+  [self AMSXcodeTMXtras_drawGlyphsForGlyphRange:glyphRange
+                                        atPoint:containerOrigin];
 }
+
 @end
 
 ////////////////////////////////////////////////////////////////////////////////
 
 #pragma mark - Bracket marching & duplication
 
-@implementation NSTextView (XcodeMate)
-- (void)XcodeMate_changeColor:(id)sender
-{
-  if (![sender isKindOfClass:[NSColorPanel class]]) {
-    [self XcodeMate_changeColor:sender];
-  }
-}
-
-- (void)XcodeMate_keyDown:(NSEvent *)event
-{
-  BOOL didInsert = NO;
-  if ([event.charactersIgnoringModifiers isEqualToString:@"D"] &&
-      ([event modifierFlags] & NSControlKeyMask)) {
-    didInsert = [self XcodeMate_duplicateSelectionInTextView:self];
-  } else {
-    NSRange range = [OpeningsClosings rangeOfString:event.characters];
-    if (range.length == 1 && range.location % 2 == 0) {
-      NSTextStorage *textStorage = [self textStorage];
-      if ([textStorage respondsToSelector:@selector(language)]) {
-        NSString *language = [[textStorage language] identifier];
-        if ([XcodeMateLanguages containsObject:language]) {
-          NSRange selectedRange =
-              [[[self selectedRanges] lastObject] rangeValue];
-          if (![[[self textStorage] sourceModel]
-                  isInStringConstantAtLocation:selectedRange.location] ||
-              range.location >= kBracketsLocation) {
-            // ensure we insert brackets closing only when next character is
-            // whitespace
-            BOOL nextBracketSame = NO;
-            if (!selectedRange.length) {
-              NSString *string = [[self textStorage] string];
-              NSString *nextCharacter = nil;
-              if (string.length) {
-                nextCharacter = [string
-                    substringWithRange:NSMakeRange(selectedRange.location, 1)];
-              }
-              if ([nextCharacter
-                      isEqualToString:[OpeningsClosings
-                                          substringWithRange:range]]) {
-                nextBracketSame = YES;
-              }
-            }
-            if (!nextBracketSame) {
-              range.location++;
-              NSString *closing = [OpeningsClosings substringWithRange:range];
-              didInsert = [self XcodeMate_insertForTextView:self
-                                                    opening:event.characters
-                                                    closing:closing];
-            }
-          }
-        }
-      }
-    }
-  }
-
-  if (!didInsert) [self XcodeMate_keyDown:event];
-}
-
-- (void)XcodeMate_deleteBackward:(NSEvent *)event
-{
-  NSRange selectedRange = [[[self selectedRanges] lastObject] rangeValue];
-  if (selectedRange.length == 0) {
-    NSRange checkRange = NSMakeRange(selectedRange.location - 1, 2);
-    @try
-    {
-      NSString *substring =
-          [[[self textStorage] string] substringWithRange:checkRange];
-      NSRange range = [OpeningsClosings rangeOfString:substring];
-      if (range.length == 2 && range.location % 2 == 0) {
-        NSTextStorage *textStorage = [self textStorage];
-        if ([textStorage respondsToSelector:@selector(language)]) {
-          NSString *language = [[textStorage language] identifier];
-          if ([XcodeMateLanguages containsObject:language]) {
-            [self moveForward:event];
-            [self XcodeMate_deleteBackward:event];
-          }
-        }
-      }
-    }
-    @catch (NSException *e)
-    {
-      if (![e.name isEqualToString:NSRangeException]) {
-        [e raise];
-      }
-    }
-  }
-  [self XcodeMate_deleteBackward:event];
-}
-
-static NSUInteger TextViewLineIndex(NSTextView *textView)
-{
-  NSRange selectedRange = [[[textView selectedRanges] lastObject] rangeValue];
-  NSUInteger res = selectedRange.location;
-  NSString *substring =
-      [[[textView textStorage] string] substringToIndex:selectedRange.location];
-  NSUInteger newline =
-      [substring rangeOfString:@"\n" options:NSBackwardsSearch].location;
-  if (newline != NSNotFound) res -= newline + 1;
-  return res;
-}
-
-- (BOOL)XcodeMate_insertForTextView:(NSTextView *)textView
-                            opening:(NSString *)opening
-                            closing:(NSString *)closing
-{
-  NSRange selectedRange = [[[textView selectedRanges] lastObject] rangeValue];
-
-  [textView.undoManager beginUndoGrouping];
-
-  if (selectedRange.length > 0) {
-    NSString *selectedText =
-        [textView.textStorage.string substringWithRange:selectedRange];
-    // NOTE: If we are in the placeholder, replace it
-    if ([selectedText hasPrefix:@"<#"] && [selectedText hasSuffix:@"#>"]) {
-      [textView insertText:opening];
-      [textView insertText:closing];
-      [textView moveBackward:self];
-    } else {
-      [textView insertText:opening];
-      [textView insertText:selectedText];
-      [textView insertText:closing];
-    }
-  } else {
-    [textView insertText:opening];
-    [textView insertText:closing];
-    [textView moveBackward:self];
-  }
-
-  [textView.undoManager endUndoGrouping];
-
-  return YES;
-}
-
-- (BOOL)XcodeMate_duplicateSelectionInTextView:(NSTextView *)textView
+static BOOL DuplicateSelectionInTextView(NSTextView *textView)
 {
   NSRange selectedRange = [[[textView selectedRanges] lastObject] rangeValue];
   if (selectedRange.length > 0) {
@@ -334,74 +180,140 @@ static NSUInteger TextViewLineIndex(NSTextView *textView)
 
   return YES;
 }
-@end
 
-////////////////////////////////////////////////////////////////////////////////
+@implementation NSTextView (AMSXcodeTMXtras)
 
-#pragma mark - Clang-format on-save
-
-@implementation NSDocument (XcodeMate)
-- (void)XcodeMate_saveDocumentWithDelegate:(id)delegate
-                           didSaveSelector:(SEL)didSaveSelector
-                               contextInfo:(void *)contextInfo
+- (void)AMSXcodeTMXtras_changeColor:(id)sender
 {
-  if (!delegate) {
-    delegate = self;
-    didSaveSelector = @selector(XcodeMate_document:didSave:contextInfo:);
+  if (![sender isKindOfClass:[NSColorPanel class]]) {
+    [self AMSXcodeTMXtras_changeColor:sender];
   }
-  [self XcodeMate_saveDocumentWithDelegate:delegate
-                           didSaveSelector:didSaveSelector
-                               contextInfo:contextInfo];
 }
 
-- (void)XcodeMate_document:(NSDocument *)document
-                   didSave:(BOOL)didSave
-               contextInfo:(void *)contextInfo
+- (void)AMSXcodeTMXtras_keyDown:(NSEvent *)event
 {
-  if ([self respondsToSelector:@selector(textStorage)]) {
-    NSTextStorage *textStorage = [self textStorage];
-    if ([textStorage respondsToSelector:@selector(language)]) {
-      NSString *language = [[textStorage language] identifier];
-      if (didSave && [ClangFormatPath length] &&
-          [XcodeMateLanguages containsObject:language]) {
-        [self performSelectorInBackground:@selector(XcodeMate_clangFormat:)
-                               withObject:ClangFormatPath];
+  BOOL didInsert = NO;
+  if ([event.charactersIgnoringModifiers isEqualToString:@"D"] &&
+      ([event modifierFlags] & NSControlKeyMask)) {
+    didInsert = DuplicateSelectionInTextView(self);
+  } else {
+    NSRange range = [OpeningsClosings rangeOfString:event.characters];
+    if (range.length == 1 && range.location % 2 == 0) {
+      NSTextStorage *textStorage = [self textStorage];
+      if ([textStorage respondsToSelector:@selector(language)]) {
+        NSString *language = [[textStorage language] identifier];
+        if ([SupportedLanguages containsObject:language]) {
+          NSRange selectedRange =
+              [[[self selectedRanges] lastObject] rangeValue];
+          if (![[[self textStorage] sourceModel]
+                  isInStringConstantAtLocation:selectedRange.location] ||
+              range.location >= kBracketsLocation) {
+            // ensure we insert brackets closing only when next character is
+            // whitespace
+            BOOL nextBracketSame = NO;
+            if (!selectedRange.length) {
+              NSString *string = [[self textStorage] string];
+              NSString *nextCharacter = nil;
+              if (string.length) {
+                nextCharacter = [string
+                    substringWithRange:NSMakeRange(selectedRange.location, 1)];
+              }
+              if ([nextCharacter
+                      isEqualToString:[OpeningsClosings
+                                          substringWithRange:range]]) {
+                nextBracketSame = YES;
+              }
+            }
+            if (!nextBracketSame) {
+              range.location++;
+              NSString *closing = [OpeningsClosings substringWithRange:range];
+              didInsert =
+                  [self AMSXcodeTMXtras_insertForTextView:self
+                                                  opening:event.characters
+                                                  closing:closing];
+            }
+          }
+        }
       }
     }
   }
+
+  if (!didInsert) [self AMSXcodeTMXtras_keyDown:event];
 }
 
-- (void)XcodeMate_clangFormat:(NSString *)clangFormatPath
+- (void)AMSXcodeTMXtras_deleteBackward:(NSEvent *)event
 {
-  NSFileManager *fileManager = [NSFileManager defaultManager];
-  NSString *path = [[self fileURL] path];
-
-  NSData *beforeData = [NSData dataWithContentsOfFile:path];
-  NSDictionary *before = [fileManager attributesOfItemAtPath:path error:NULL];
-
-  NSTask *task = [[NSTask alloc] init];
-  [task setLaunchPath:clangFormatPath];
-  NSArray *arguments =
-      [NSArray arrayWithObjects:@"-i", @"-style=file", @"-fallback-style=none",
-                                path, nil];
-  [task setArguments:arguments];
-  [task launch];
-  [task waitUntilExit];
-  [task release];
-
-  NSDictionary *after = [fileManager attributesOfItemAtPath:path error:NULL];
-  NSData *afterData = [NSData dataWithContentsOfFile:path];
-
-  // this is workaround for Xcode not reloading file if modification date
-  // is the same as saved one, which can happen if we reformat in same second.
-  if (![afterData isEqualToData:beforeData] && before &&
-      [after.fileModificationDate isEqualToDate:before.fileModificationDate]) {
-    NSDictionary *attributes = [NSDictionary
-        dictionaryWithObjectsAndKeys:[after.fileModificationDate
-                                         dateByAddingTimeInterval:1],
-                                     NSFileModificationDate, nil];
-    [fileManager setAttributes:attributes ofItemAtPath:path error:NULL];
+  NSRange selectedRange = [[[self selectedRanges] lastObject] rangeValue];
+  if (selectedRange.length == 0) {
+    NSRange checkRange = NSMakeRange(selectedRange.location - 1, 2);
+    @try
+    {
+      NSString *substring =
+          [[[self textStorage] string] substringWithRange:checkRange];
+      NSRange range = [OpeningsClosings rangeOfString:substring];
+      if (range.length == 2 && range.location % 2 == 0) {
+        NSTextStorage *textStorage = [self textStorage];
+        if ([textStorage respondsToSelector:@selector(language)]) {
+          NSString *language = [[textStorage language] identifier];
+          if ([SupportedLanguages containsObject:language]) {
+            [self moveForward:event];
+            [self AMSXcodeTMXtras_deleteBackward:event];
+          }
+        }
+      }
+    }
+    @catch (NSException *e)
+    {
+      if (![e.name isEqualToString:NSRangeException]) {
+        [e raise];
+      }
+    }
   }
+  [self AMSXcodeTMXtras_deleteBackward:event];
+}
+
+static NSUInteger TextViewLineIndex(NSTextView *textView)
+{
+  NSRange selectedRange = [[[textView selectedRanges] lastObject] rangeValue];
+  NSUInteger res = selectedRange.location;
+  NSString *substring =
+      [[[textView textStorage] string] substringToIndex:selectedRange.location];
+  NSUInteger newline =
+      [substring rangeOfString:@"\n" options:NSBackwardsSearch].location;
+  if (newline != NSNotFound) res -= newline + 1;
+  return res;
+}
+
+- (BOOL)AMSXcodeTMXtras_insertForTextView:(NSTextView *)textView
+                                  opening:(NSString *)opening
+                                  closing:(NSString *)closing
+{
+  NSRange selectedRange = [[[textView selectedRanges] lastObject] rangeValue];
+
+  [textView.undoManager beginUndoGrouping];
+
+  if (selectedRange.length > 0) {
+    NSString *selectedText =
+        [textView.textStorage.string substringWithRange:selectedRange];
+    // NOTE: If we are in the placeholder, replace it
+    if ([selectedText hasPrefix:@"<#"] && [selectedText hasSuffix:@"#>"]) {
+      [textView insertText:opening];
+      [textView insertText:closing];
+      [textView moveBackward:self];
+    } else {
+      [textView insertText:opening];
+      [textView insertText:selectedText];
+      [textView insertText:closing];
+    }
+  } else {
+    [textView insertText:opening];
+    [textView insertText:closing];
+    [textView moveBackward:self];
+  }
+
+  [textView.undoManager endUndoGrouping];
+
+  return YES;
 }
 
 @end
@@ -410,7 +322,27 @@ static NSUInteger TextViewLineIndex(NSTextView *textView)
 
 #pragma mark - Plugin startup
 
-@implementation XcodeMate
+static BOOL Swizzle(Class class, SEL original, SEL replacement)
+{
+  if (!class) return NO;
+  Method originalMethod = class_getInstanceMethod(class, original);
+  if (!originalMethod) {
+    NSLog(PLUGIN @" error: original method -[%@ %@] not found",
+          NSStringFromClass(class), NSStringFromSelector(original));
+    return NO;
+  }
+  Method replacementMethod = class_getInstanceMethod(class, replacement);
+  if (!replacementMethod) {
+    NSLog(PLUGIN @" error: replacement method -[%@ %@] not found",
+          NSStringFromClass(class), NSStringFromSelector(replacement));
+    return NO;
+  }
+  method_exchangeImplementations(originalMethod, replacementMethod);
+  return YES;
+}
+
+@implementation AMSXcodeTMXtras
+
 + (void)pluginDidLoad:(NSBundle *)bundle
 {
   NSString *bundleIdentifier = [[NSBundle mainBundle] bundleIdentifier];
@@ -419,31 +351,24 @@ static NSUInteger TextViewLineIndex(NSTextView *textView)
   if (![bundleIdentifier isEqualToString:@"com.apple.dt.Xcode"]) {
     if (bundleIdentifier.length) {
       // complain only when there's bundle identifier
-      NSLog(@"XcodeMate unknown bundle identifier: %@", bundleIdentifier);
+      NSLog(PLUGIN @" unknown bundle identifier: %@", bundleIdentifier);
     }
     return;
   }
-  [NSClassFromString(@"DVTSourceTextView")
-      XcodeMate_swizzle:@selector(changeColor:)
-                   with:@selector(XcodeMate_changeColor:)];
-  [NSClassFromString(@"DVTSourceTextView")
-      XcodeMate_swizzle:@selector(keyDown:)
-                   with:@selector(XcodeMate_keyDown:)];
-  [NSClassFromString(@"DVTSourceTextView")
-      XcodeMate_swizzle:@selector(deleteBackward:)
-                   with:@selector(XcodeMate_deleteBackward:)];
-  [NSClassFromString(@"DVTLayoutManager")
-      XcodeMate_swizzle:@selector(drawGlyphsForGlyphRange:atPoint:)
-                   with:@selector(XcodeMate_drawGlyphsForGlyphRange:atPoint:)];
-  [NSClassFromString(@"IDESourceCodeDocument")
-      XcodeMate_swizzle:@selector(saveDocumentWithDelegate:
-                                           didSaveSelector:
-                                               contextInfo:)
-                   with:@selector(XcodeMate_saveDocumentWithDelegate:
-                                                     didSaveSelector:
-                                                         contextInfo:)];
+  Swizzle(NSClassFromString(@"DVTSourceTextView"), //
+          @selector(changeColor:),                 //
+          @selector(AMSXcodeTMXtras_changeColor:));
+  Swizzle(NSClassFromString(@"DVTSourceTextView"), //
+          @selector(keyDown:),                     //
+          @selector(AMSXcodeTMXtras_keyDown:));
+  Swizzle(NSClassFromString(@"DVTSourceTextView"), //
+          @selector(deleteBackward:),
+          @selector(AMSXcodeTMXtras_deleteBackward:));
+  Swizzle(NSClassFromString(@"DVTLayoutManager"),
+          @selector(drawGlyphsForGlyphRange:atPoint:),
+          @selector(AMSXcodeTMXtras_drawGlyphsForGlyphRange:atPoint:));
 
-  XcodeMateLanguages = [[NSSet alloc]
+  SupportedLanguages = [[NSSet alloc]
       initWithObjects:@"Xcode.SourceCodeLanguage.C", // Xcode 4
                       @"Xcode.SourceCodeLanguage.C++",
                       @"Xcode.SourceCodeLanguage.C-Plus-Plus",
@@ -453,7 +378,7 @@ static NSUInteger TextViewLineIndex(NSTextView *textView)
                       @"Xcode.SourceCodeLanguage.Objective-J",
                       @"Xcode.SourceCodeLanguage.JavaScript", nil];
 #if DEBUG
-  NSLog(@"XcodeMate %@ loaded.",
+  NSLog(PLUGIN @" %@ loaded.",
         [[NSBundle mainBundle]
             objectForInfoDictionaryKey:(NSString *)kCFBundleVersionKey]);
 #endif
@@ -471,20 +396,20 @@ static NSUInteger TextViewLineIndex(NSTextView *textView)
                object:userDefaults];
 }
 
-#define LOAD_STRING_DEFAULT(name)                                              \
-  if ((ovalue = [userDefaults objectForKey:@"XcodeMate" @ #name]) &&           \
-      [ovalue isKindOfClass:[NSString class]]) {                               \
-    if (!name || ![name isEqualToString:ovalue]) {                             \
+#define LOAD_DEFAULT(clazz, name)                                              \
+  if ((ovalue = [userDefaults objectForKey:@"AMS" @ #name]) &&                 \
+      [ovalue isKindOfClass:[clazz class]]) {                                  \
+    if (!name || ![name isEqual:ovalue]) {                                     \
       [name release];                                                          \
       name = [ovalue copy];                                                    \
     }                                                                          \
-  } else if (![name isEqualToString:Default##name]) {                          \
+  } else if (![name isEqual:Default##name]) {                                  \
     [name release];                                                            \
     name = [Default##name copy];                                               \
   }
 
 #define LOAD_DOUBLE_DEFAULT(name, modified)                                    \
-  if ((dvalue = [userDefaults doubleForKey:@"XcodeMate" @ #name]) &&           \
+  if ((dvalue = [userDefaults doubleForKey:@"AMS" @ #name]) &&                 \
       dvalue != WhitespaceAlpha) {                                             \
     name = dvalue;                                                             \
     modified = YES;                                                            \
@@ -495,10 +420,9 @@ static NSUInteger TextViewLineIndex(NSTextView *textView)
   NSUserDefaults *userDefaults = (NSUserDefaults *)[notification object];
 
   NSString *ovalue;
-  LOAD_STRING_DEFAULT(SpaceGlyph);
-  LOAD_STRING_DEFAULT(TabGlyph);
-  LOAD_STRING_DEFAULT(ReturnGlyph);
-  LOAD_STRING_DEFAULT(ClangFormatPath);
+  LOAD_DEFAULT(NSString, SpaceGlyph);
+  LOAD_DEFAULT(NSString, TabGlyph);
+  LOAD_DEFAULT(NSString, ReturnGlyph);
 
   BOOL whitespaceModified = NO;
   double dvalue;

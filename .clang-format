@@ -3,4 +3,5 @@ BasedOnStyle: LLVM
 BreakBeforeBraces: Linux
 AllowShortIfStatementsOnASingleLine: true
 AllowShortFunctionsOnASingleLine: false
+Cpp11BracedListStyle: false
 ...

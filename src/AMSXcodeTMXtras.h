@@ -1,6 +1,6 @@
 //
-// XcodeMate.h
-// XcodeMate
+// AMSXcodeTMXtras.h
+// AMSXcodeTMXtras
 //
 // Copyright (c) 2009 Ciarán Walsh, 2010-2014 Adam Strzelecki
 //
@@ -24,5 +24,5 @@
 
 #import <Cocoa/Cocoa.h>
 
-@interface XcodeMate : NSObject
+@interface AMSXcodeTMXtras : NSObject
 @end

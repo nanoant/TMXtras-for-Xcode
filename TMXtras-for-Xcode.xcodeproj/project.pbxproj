@@ -3,22 +3,22 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 45;
+	objectVersion = 46;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		8D5B49B4048680CD000E48DA /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7ADFEA557BF11CA2CBB /* Cocoa.framework */; };
-		91FC34D30F84352000B86DCD /* XcodeMate.m in Sources */ = {isa = PBXBuildFile; fileRef = 91FC34D20F84352000B86DCD /* XcodeMate.m */; };
+		91FC34D30F84352000B86DCD /* AMSXcodeTMXtras.m in Sources */ = {isa = PBXBuildFile; fileRef = 91FC34D20F84352000B86DCD /* AMSXcodeTMXtras.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		089C1672FE841209C02AAC07 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		089C167FFE841241C02AAC07 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		1058C7ADFEA557BF11CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
-		8D5B49B6048680CD000E48DA /* XcodeMate.pbplugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = XcodeMate.pbplugin; sourceTree = BUILT_PRODUCTS_DIR; };
+		8D5B49B6048680CD000E48DA /* AMSXcodeTMXtras.xcplugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AMSXcodeTMXtras.xcplugin; sourceTree = BUILT_PRODUCTS_DIR; };
 		916F428A0F843B3100E18365 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		91FC34D10F84352000B86DCD /* XcodeMate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XcodeMate.h; sourceTree = "<group>"; };
-		91FC34D20F84352000B86DCD /* XcodeMate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XcodeMate.m; sourceTree = "<group>"; };
+		91FC34D10F84352000B86DCD /* AMSXcodeTMXtras.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AMSXcodeTMXtras.h; sourceTree = "<group>"; };
+		91FC34D20F84352000B86DCD /* AMSXcodeTMXtras.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AMSXcodeTMXtras.m; sourceTree = "<group>"; };
 		971CC165127E1E3B005792E7 /* Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Prefix.pch; sourceTree = "<group>"; };
 		D2F7E65807B2D6F200F64583 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
@@ -45,6 +45,7 @@
 			);
 			name = XcodeBracketMatcher;
 			sourceTree = "<group>";
+			tabWidth = 4;
 		};
 		089C1671FE841209C02AAC07 /* Frameworks */ = {
 			isa = PBXGroup;
@@ -60,7 +61,7 @@
 		19C28FB8FE9D52D311CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				8D5B49B6048680CD000E48DA /* XcodeMate.pbplugin */,
+				8D5B49B6048680CD000E48DA /* AMSXcodeTMXtras.xcplugin */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -69,8 +70,8 @@
 			isa = PBXGroup;
 			children = (
 				971CC165127E1E3B005792E7 /* Prefix.pch */,
-				91FC34D10F84352000B86DCD /* XcodeMate.h */,
-				91FC34D20F84352000B86DCD /* XcodeMate.m */,
+				91FC34D10F84352000B86DCD /* AMSXcodeTMXtras.h */,
+				91FC34D20F84352000B86DCD /* AMSXcodeTMXtras.m */,
 			);
 			name = Source;
 			path = src;
@@ -88,9 +89,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		8D5B49AC048680CD000E48DA /* XcodeMate */ = {
+		8D5B49AC048680CD000E48DA /* AMSXcodeTMXtras */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 1DEB913A08733D840010E9CD /* Build configuration list for PBXNativeTarget "XcodeMate" */;
+			buildConfigurationList = 1DEB913A08733D840010E9CD /* Build configuration list for PBXNativeTarget "AMSXcodeTMXtras" */;
 			buildPhases = (
 				8D5B49AF048680CD000E48DA /* Resources */,
 				8D5B49B1048680CD000E48DA /* Sources */,
@@ -101,10 +102,10 @@
 			);
 			dependencies = (
 			);
-			name = XcodeMate;
+			name = AMSXcodeTMXtras;
 			productInstallPath = "$(HOME)/Library/Bundles";
 			productName = XcodeBracketMatcher;
-			productReference = 8D5B49B6048680CD000E48DA /* XcodeMate.pbplugin */;
+			productReference = 8D5B49B6048680CD000E48DA /* AMSXcodeTMXtras.xcplugin */;
 			productType = "com.apple.product-type.bundle";
 		};
 /* End PBXNativeTarget section */
@@ -113,9 +114,12 @@
 		089C1669FE841209C02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				CLASSPREFIX = AMS;
+				LastUpgradeCheck = 0510;
+				ORGANIZATIONNAME = "nanoANT Adam Strzelecki";
 			};
-			buildConfigurationList = 1DEB913E08733D840010E9CD /* Build configuration list for PBXProject "XcodeMate" */;
-			compatibilityVersion = "Xcode 3.1";
+			buildConfigurationList = 1DEB913E08733D840010E9CD /* Build configuration list for PBXProject "TMXtras-for-Xcode" */;
+			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 1;
 			knownRegions = (
@@ -128,7 +132,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				8D5B49AC048680CD000E48DA /* XcodeMate */,
+				8D5B49AC048680CD000E48DA /* AMSXcodeTMXtras */,
 			);
 		};
 /* End PBXProject section */
@@ -164,7 +168,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				91FC34D30F84352000B86DCD /* XcodeMate.m in Sources */,
+				91FC34D30F84352000B86DCD /* AMSXcodeTMXtras.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -175,18 +179,17 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_MODEL_TUNING = G5;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = src/Prefix.pch;
 				INFOPLIST_FILE = resources/Info.plist;
 				INSTALL_PATH = "$(HOME)/Library/Application Support/Developer/Shared/Xcode/Plug-ins/";
-				LD_RUNPATH_SEARCH_PATHS = /Developer;
-				PRODUCT_NAME = XcodeMate;
-				WRAPPER_EXTENSION = pbplugin;
+				PRODUCT_NAME = AMSXcodeTMXtras;
+				WRAPPER_EXTENSION = xcplugin;
 			};
 			name = Debug;
 		};
@@ -194,15 +197,14 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = src/Prefix.pch;
 				INFOPLIST_FILE = resources/Info.plist;
 				INSTALL_PATH = "$(HOME)/Library/Application Support/Developer/Shared/Xcode/Plug-ins/";
-				LD_RUNPATH_SEARCH_PATHS = /Developer;
-				PRODUCT_NAME = XcodeMate;
-				WRAPPER_EXTENSION = pbplugin;
+				PRODUCT_NAME = AMSXcodeTMXtras;
+				WRAPPER_EXTENSION = xcplugin;
 			};
 			name = Release;
 		};
@@ -211,6 +213,7 @@
 			buildSettings = {
 				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = "DEBUG=1";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -229,7 +232,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		1DEB913A08733D840010E9CD /* Build configuration list for PBXNativeTarget "XcodeMate" */ = {
+		1DEB913A08733D840010E9CD /* Build configuration list for PBXNativeTarget "AMSXcodeTMXtras" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1DEB913B08733D840010E9CD /* Debug */,
@@ -238,7 +241,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		1DEB913E08733D840010E9CD /* Build configuration list for PBXProject "XcodeMate" */ = {
+		1DEB913E08733D840010E9CD /* Build configuration list for PBXProject "TMXtras-for-Xcode" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1DEB913F08733D840010E9CD /* Debug */,
