@@ -211,7 +211,8 @@ static BOOL DuplicateSelectionInTextView(NSTextView *textView)
             // ensure we insert brackets closing only when next character is
             // whitespace
             BOOL nextBracketSame = NO;
-            if (!selectedRange.length) {
+            if (!selectedRange.length &&
+                selectedRange.location < [[self textStorage] length] - 1) {
               NSString *string = [[self textStorage] string];
               NSString *nextCharacter = nil;
               if (string.length) {
@@ -246,8 +247,7 @@ static BOOL DuplicateSelectionInTextView(NSTextView *textView)
   NSRange selectedRange = [[[self selectedRanges] lastObject] rangeValue];
   if (selectedRange.length == 0) {
     NSRange checkRange = NSMakeRange(selectedRange.location - 1, 2);
-    @try
-    {
+    @try {
       NSString *substring =
           [[[self textStorage] string] substringWithRange:checkRange];
       NSRange range = [OpeningsClosings rangeOfString:substring];
@@ -261,9 +261,7 @@ static BOOL DuplicateSelectionInTextView(NSTextView *textView)
           }
         }
       }
-    }
-    @catch (NSException *e)
-    {
+    } @catch (NSException *e) {
       if (![e.name isEqualToString:NSRangeException]) {
         [e raise];
       }
@@ -296,7 +294,7 @@ static NSUInteger TextViewLineIndex(NSTextView *textView)
     NSString *selectedText =
         [textView.textStorage.string substringWithRange:selectedRange];
     // NOTE: If we are in the placeholder, replace it
-    if ([selectedText hasPrefix:@"<#"] && [selectedText hasSuffix:@"#>"]) {
+    if ([selectedText hasPrefix:@"< #"] && [selectedText hasSuffix:@" #>"]) {
       [textView insertText:opening];
       [textView insertText:closing];
       [textView moveBackward:self];
